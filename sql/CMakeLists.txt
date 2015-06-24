@@ -22,6 +22,7 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/sql/auth
   ${CMAKE_SOURCE_DIR}/regex 
   ${ZLIB_INCLUDE_DIR}
+  ${PROTOBUF_INCLUDE_DIR}
   ${SSL_INCLUDE_DIRS}
   ${CMAKE_BINARY_DIR}/sql
 )
@@ -344,7 +345,7 @@ ADD_DEPENDENCIES(sql GenSysSchema)
 DTRACE_INSTRUMENT(sql)
 TARGET_LINK_LIBRARIES(sql ${MYSQLD_STATIC_PLUGIN_LIBS} 
   mysys mysys_ssl dbug strings vio regex binlogevents_static
-  ${LIBWRAP} ${LIBCRYPT} ${LIBDL}
+  ${LIBWRAP} ${LIBCRYPT} ${LIBDL} ${PROTOBUF_LIBRARY}
   ${SSL_LIBRARIES})
 
 #
@@ -422,7 +423,7 @@ IF(APPLE)
   # Add CoreServices framework since some dloadable plugins may need it 
   FIND_LIBRARY(CORESERVICES NAMES CoreServices) 
   IF(CORESERVICES) 
-    TARGET_LINK_LIBRARIES(mysqld ${CORESERVICES}) 
+    TARGET_LINK_LIBRARIES(mysqld ${CORESERVICES} ${PROTOBUF_LIBRARY})
   ENDIF() 
 ENDIF() 
 
@@ -458,7 +459,7 @@ IF(NOT WITHOUT_DYNAMIC_PLUGINS)
 ENDIF()
 
 SET_TARGET_PROPERTIES(mysqld PROPERTIES ENABLE_EXPORTS TRUE) 
-TARGET_LINK_LIBRARIES(mysqld sql binlog rpl master slave sql mysys mysys_ssl binlogevents_static)
+TARGET_LINK_LIBRARIES(mysqld sql binlog rpl master slave sql mysys mysys_ssl binlogevents_static ${PROTOBUF_LIBRARY})
 
 # Provide plugins with minimal set of libraries
 SET(INTERFACE_LIBS ${LIBRT})

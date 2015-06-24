@@ -194,6 +194,7 @@ INCLUDE(character_sets)
 INCLUDE(cpu_info)
 INCLUDE(zlib)
 INCLUDE(lz4)
+INCLUDE(protobuf)
 INCLUDE(libevent)
 INCLUDE(ssl)
 INCLUDE(readline)
@@ -457,6 +458,8 @@ INCLUDE_DIRECTORIES(
   ${CMAKE_SOURCE_DIR}/libbinlogevents/export)
 # Add bundled or system zlib.
 MYSQL_CHECK_ZLIB_WITH_COMPRESS()
+# Add bundled or system protobuf.
+MYSQL_CHECK_PROTOBUF()
 # Add bundled yassl/taocrypt or system openssl.
 MYSQL_CHECK_SSL()
 # Add system/bundled editline.

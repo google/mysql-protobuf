@@ -202,7 +202,7 @@ ADD_CONVENIENCE_LIBRARY(clientlib ${CLIENT_SOURCES})
 DTRACE_INSTRUMENT(clientlib)
 ADD_DEPENDENCIES(clientlib GenError)
 
-SET(LIBS clientlib dbug strings vio mysys mysys_ssl ${ZLIB_LIBRARY} ${SSL_LIBRARIES} ${LIBDL})
+SET(LIBS clientlib dbug strings vio mysys mysys_ssl ${ZLIB_LIBRARY} ${SSL_LIBRARIES} ${LIBDL} ${PROTOBUF_LIBRARY})
 
 #
 # On Windows platform client library includes the client-side 
