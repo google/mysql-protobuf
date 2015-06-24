@@ -7982,6 +7982,13 @@ create_func_cast(THD *thd, const POS &pos, Item *a, const Cast_type *type)
     res= new (thd->mem_root) Item_char_typecast(POS(), a, len, real_cs);
     break;
   }
+  case ITEM_CAST_PROTOBUF:
+  {
+    DBUG_PRINT("info", ("item cast protobuf"));
+    // TODO(fanton): return a proto_typecast.
+    return NULL;
+    break;
+  }
   case ITEM_CAST_JSON:
   {
     res= new (thd->mem_root) Item_json_typecast(thd, pos, a);

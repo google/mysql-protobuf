@@ -558,6 +558,7 @@ can_convert_field_to(Field *field,
     break;
 
   case MYSQL_TYPE_GEOMETRY:
+  case MYSQL_TYPE_PROTOBUF:
   case MYSQL_TYPE_JSON:
   case MYSQL_TYPE_TIMESTAMP:
   case MYSQL_TYPE_DATE:

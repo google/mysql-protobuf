@@ -3898,6 +3898,40 @@ public:
   uint is_equal(Create_field *new_field);
 };
 
+/// A field that stores a PROTOBUF value.
+class Field_proto :public Field_blob
+{
+  type_conversion_status unsupported_conversion();
+public:
+    Field_proto(uchar *ptr_arg, uchar *null_ptr_arg, uint null_bit_arg,
+                enum utype unireg_check_arg, const char *field_name_arg,
+                TABLE_SHARE *share, uint blob_pack_length)
+    : Field_blob(ptr_arg, null_ptr_arg, null_bit_arg, unireg_check_arg,
+                 field_name_arg, share, blob_pack_length,
+                 &my_charset_utf8mb4_bin)
+  {}
+
+  Field_proto(uint32 len_arg,bool maybe_null_arg, const char *field_name_arg,
+             const CHARSET_INFO *cs, bool set_packlength)
+    : Field_blob(len_arg, maybe_null_arg, field_name_arg, cs, set_packlength)
+  {}
+
+  enum_field_types type() const { return MYSQL_TYPE_PROTOBUF; }
+  void sql_type(String &str) const;
+  bool has_charset() const { return false; }
+
+  type_conversion_status store(const char *to, size_t length,
+                               const CHARSET_INFO *charset);
+  type_conversion_status store(double nr);
+  type_conversion_status store(longlong nr, bool unsigned_val);
+  type_conversion_status store_decimal(const my_decimal *);
+  type_conversion_status store_time(MYSQL_TIME *ltime, uint8 dec_arg);
+
+  Field_proto *clone(MEM_ROOT *mem_root) const;
+  Field_proto *clone() const;
+  Item_result cast_to_int_type () const { return INT_RESULT; }
+  String *val_str(String *tmp, String *str);
+};
 
 /// A field that stores a JSON value.
 class Field_json :public Field_blob
@@ -4472,6 +4506,7 @@ type_conversion_status set_field_to_null_with_conversions(Field *field,
 #define FIELDFLAG_GEOM			2048    // mangled with decimals!
 #define FIELDFLAG_JSON                  4096    /* mangled with decimals and
                                                    with bitfields! */
+#define FIELDFLAG_PROTOBUF              8192    /* TODO(fanton): make sure that this is ok */
 
 #define FIELDFLAG_TREAT_BIT_AS_CHAR     4096    /* use Field_bit_as_char */
 
@@ -4541,6 +4576,11 @@ inline int f_is_json(int x)
 {
   return ((x & (FIELDFLAG_JSON | FIELDFLAG_NUMBER | FIELDFLAG_BITFIELD)) ==
           FIELDFLAG_JSON);
+}
+inline int f_is_proto(int x)
+{
+  return ((x & (FIELDFLAG_PROTOBUF | FIELDFLAG_NUMBER | FIELDFLAG_BITFIELD)) ==
+          FIELDFLAG_PROTOBUF);
 }
 inline int f_is_equ(int x)
 {

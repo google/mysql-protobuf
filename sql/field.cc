@@ -9111,6 +9111,121 @@ ulonglong Field_json::make_hash_key(ulonglong *hash_val)
 
 
 /****************************************************************************
+** PROTOBUF type
+** Like Field_json but uses Google protocol buffers to manipulate data.
+****************************************************************************/
+
+// Create a shallow clone of this field in the specified MEM_ROOT.
+Field_proto *Field_proto::clone(MEM_ROOT *mem_root) const
+{
+  DBUG_ASSERT(type() == MYSQL_TYPE_PROTOBUF);
+  return new (mem_root) Field_proto(*this);
+}
+
+
+// Create a shallow clone of this field.
+Field_proto *Field_proto::clone() const
+{
+  DBUG_ASSERT(type() == MYSQL_TYPE_PROTOBUF);
+  return new Field_proto(*this);
+}
+
+/**
+  Get the type of this field (proto).
+  @param str  the string that receives the type
+*/
+void Field_proto::sql_type(String &str) const
+{
+  str.set_ascii(STRING_WITH_LEN("protobuf"));
+}
+
+type_conversion_status Field_proto::store(const char *from, size_t length,
+                                          const CHARSET_INFO *cs)
+{
+  DBUG_ENTER("Field_proto::store");
+  ASSERT_COLUMN_MARKED_FOR_WRITE;
+
+  const char *s;
+  size_t ss;
+  String v(from, length, cs);
+
+  if (ensure_utf8mb4(&v, &value, &s, &ss, true))
+    return TYPE_ERR_BAD_VALUE;
+
+  value.length(0);
+  value.set_charset(&my_charset_bin);
+
+  // For now, we just add some text at the beginning of the text came
+  // from the upper layers.
+  value.append("Future encoded proto: ");
+  value.append(from, length);
+
+  store_ptr_and_length(value.ptr(), static_cast<uint32>(value.length()));
+  DBUG_RETURN(TYPE_OK);
+}
+
+/**
+  Helper function for raising an error when trying to store a value
+  into a PROTOBUF column, and that value needs to be casted to PROTOBUF before
+  it can be stored.
+*/
+type_conversion_status Field_proto::unsupported_conversion()
+{
+  String s;
+
+  ASSERT_COLUMN_MARKED_FOR_WRITE;
+
+  s.append("column ");
+  s.append(*table_name);
+  s.append('.');
+  s.append(field_name);
+
+  my_error(ER_INVALID_PROTO_TEXT, MYF(0), "not a PROTOBUF text, may need CAST",
+           0, s.c_ptr_safe());
+  return TYPE_ERR_BAD_VALUE;
+}
+
+// Store a double in a PROTOBUF field. Will raise an error for now.
+type_conversion_status Field_proto::store(double nr)
+{
+  return unsupported_conversion();
+}
+
+// Store an integer in a PROTOBUF field. Will raise an error for now.
+type_conversion_status Field_proto::store(longlong nr, bool unsigned_val)
+{
+  return unsupported_conversion();
+}
+
+// Store a decimal in a PROTOBUF field. Will raise an error for now.
+type_conversion_status Field_proto::store_decimal(const my_decimal *)
+{
+  return unsupported_conversion();
+}
+
+// Store a TIME value in a PROTOBUF field. Will raise an error for now.
+type_conversion_status Field_proto::store_time(MYSQL_TIME *ltime, uint8 dec_arg)
+{
+  return unsupported_conversion();
+}
+
+String *Field_proto::val_str(String *tmp, String *val_ptr)
+{
+  DBUG_ENTER("Field_proto::val_str");
+  ASSERT_COLUMN_MARKED_FOR_READ;
+
+  tmp->length(0);
+  val_ptr= Field_blob::val_str(tmp, tmp);
+
+  // For the moment, just delete the 22 characters added in the store
+  // method.
+  val_ptr->replace(0, 22, "", 0);
+
+  DBUG_RETURN(val_ptr);
+}
+
+
+/****************************************************************************
 ** enum type.
 ** This is a string which only can have a selection of different values.
 ** If one uses this string in a number context one gets the type number.
@@ -10318,6 +10433,7 @@ void Create_field::create_length_to_internal_length(void)
   case MYSQL_TYPE_LONG_BLOB:
   case MYSQL_TYPE_BLOB:
   case MYSQL_TYPE_GEOMETRY:
+  case MYSQL_TYPE_PROTOBUF:
   case MYSQL_TYPE_JSON:
   case MYSQL_TYPE_VAR_STRING:
   case MYSQL_TYPE_STRING:
@@ -10397,6 +10513,10 @@ void Create_field::init_for_tmp_table(enum_field_types sql_type_arg,
     pack_flag= FIELDFLAG_GEOM;
     break;
 
+  case MYSQL_TYPE_PROTOBUF:
+    pack_flag= FIELDFLAG_PROTOBUF;
+    break;
+
   case MYSQL_TYPE_JSON:
     pack_flag= FIELDFLAG_JSON;
     break;
@@ -10445,6 +10565,7 @@ void Create_field::init_for_tmp_table(enum_field_types sql_type_arg,
   case MYSQL_TYPE_LONG_BLOB:
   case MYSQL_TYPE_BLOB:
   case MYSQL_TYPE_GEOMETRY:
+  case MYSQL_TYPE_PROTOBUF:
   case MYSQL_TYPE_JSON:
     /*
       If you are going to use the above types, you have to pass a
@@ -10733,6 +10854,7 @@ bool Create_field::init(THD *thd, const char *fld_name,
   case MYSQL_TYPE_LONG_BLOB:
   case MYSQL_TYPE_MEDIUM_BLOB:
   case MYSQL_TYPE_GEOMETRY:
+  case MYSQL_TYPE_PROTOBUF:
   case MYSQL_TYPE_JSON:
     if (fld_default_value)
     {
@@ -10993,6 +11115,7 @@ size_t calc_pack_length(enum_field_types type, size_t length)
   case MYSQL_TYPE_MEDIUM_BLOB:	return 3+portable_sizeof_char_ptr;
   case MYSQL_TYPE_LONG_BLOB:	return 4+portable_sizeof_char_ptr;
   case MYSQL_TYPE_GEOMETRY:	return 4+portable_sizeof_char_ptr;
+  case MYSQL_TYPE_PROTOBUF:     return 4+portable_sizeof_char_ptr;
   case MYSQL_TYPE_JSON:         return 4+portable_sizeof_char_ptr;
   case MYSQL_TYPE_SET:
   case MYSQL_TYPE_ENUM:
@@ -11090,6 +11213,12 @@ Field *make_field(TABLE_SHARE *share, uchar *ptr, size_t field_length,
       return new Field_geom(ptr,null_pos,null_bit,
 			    unireg_check, field_name, share,
 			    pack_length, geom_type);
+
+    if (f_is_proto(pack_flag))
+      return new Field_proto(ptr, null_pos, null_bit,
+                             unireg_check, field_name, share,
+                             pack_length);
+
     if (f_is_json(pack_flag))
       return new Field_json(ptr, null_pos, null_bit,
                             unireg_check, field_name, share,

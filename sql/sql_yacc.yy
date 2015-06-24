@@ -732,6 +732,7 @@ bool my_yyoverflow(short **a, YYSTYPE **b, YYLTYPE **c, ulong *yystacksize);
 %token  JOIN_SYM                      /* SQL-2003-R */
 %token  JSON_SEPARATOR_SYM            /* MYSQL */
 %token  JSON_SYM                      /* MYSQL */
+%token  PROTOBUF_SYM                  /* MYSQL */
 %token  KEYS
 %token  KEY_BLOCK_SIZE
 %token  KEY_SYM                       /* SQL-2003-N */
@@ -6683,6 +6684,11 @@ type:
             Lex->charset=&my_charset_bin;
             $$=MYSQL_TYPE_JSON;
           }
+        | PROTOBUF_SYM
+          {
+            Lex->charset=&my_charset_bin;
+            $$=MYSQL_TYPE_PROTOBUF;
+          }
         ;
 
 spatial_type:
@@ -10205,6 +10211,14 @@ cast_type:
             $$.length= NULL;
             $$.dec= NULL;
           }
+        | PROTOBUF_SYM
+          {
+            $$.target=ITEM_CAST_PROTOBUF;
+            $$.charset= NULL;
+            $$.type_flags= 0;
+            $$.length= NULL;
+            $$.dec= NULL;
+          }
         ;
 
 opt_expr_list:
@@ -13464,6 +13478,7 @@ keyword_sp:
         | PROCESSLIST_SYM          {}
         | PROFILE_SYM              {}
         | PROFILES_SYM             {}
+        | PROTOBUF_SYM             {}
         | PROXY_SYM                {}
         | QUARTER_SYM              {}
         | QUERY_SYM                {}

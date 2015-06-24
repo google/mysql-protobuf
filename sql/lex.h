@@ -460,6 +460,7 @@ static const SYMBOL symbols[] = {
   { SYM("PROCESSLIST",              PROCESSLIST_SYM)},
   { SYM("PROFILE",                  PROFILE_SYM)},
   { SYM("PROFILES",                 PROFILES_SYM)},
+  { SYM("PROTOBUF",                 PROTOBUF_SYM)},
   { SYM("PROXY",                    PROXY_SYM)},
   { SYM("PURGE",                    PURGE)},
   { SYM("QUARTER",                  QUARTER_SYM)},

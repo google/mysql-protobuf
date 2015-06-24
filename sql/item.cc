@@ -6585,6 +6585,7 @@ Field *Item::tmp_table_field_from_field_type(TABLE *table, bool fixed_length)
     field= new Field_geom(max_length, maybe_null,
                           item_name.ptr(), table->s, get_geometry_type());
     break;
+  case MYSQL_TYPE_PROTOBUF: // TODO(fanton): Fix this in a future commit.
   case MYSQL_TYPE_JSON:
     field= new Field_json(max_length, maybe_null, item_name.ptr());
   }
@@ -6734,7 +6735,7 @@ Item::save_in_field_inner(Field *field, bool no_conversions)
     {
       enum_field_types ft= field_type();
 
-      if (ft == MYSQL_TYPE_JSON)
+      if (ft == MYSQL_TYPE_JSON || ft == MYSQL_TYPE_PROTOBUF)
       {
         if (field->is_temporal())
         {
@@ -7438,6 +7439,7 @@ bool Item::send(Protocol *protocol, String *buffer)
   case MYSQL_TYPE_VARCHAR:
   case MYSQL_TYPE_BIT:
   case MYSQL_TYPE_NEWDECIMAL:
+  case MYSQL_TYPE_PROTOBUF: // TODO(fanton): create a proto wrapper
   case MYSQL_TYPE_JSON:
   {
     String *res;
