@@ -1226,6 +1226,7 @@ bool my_yyoverflow(short **a, YYSTYPE **b, YYLTYPE **c, ulong *yystacksize);
         function_call_keyword
         function_call_nonkeyword
         function_call_generic
+        protobuf_selector
         function_call_conflict
         signal_allowed_expr
         simple_target_specification
@@ -1248,7 +1249,7 @@ bool my_yyoverflow(short **a, YYSTYPE **b, YYLTYPE **c, ulong *yystacksize);
 
 %type <item_list2>
         expr_list udf_expr_list opt_udf_expr_list opt_expr_list select_item_list
-        ident_list ident_list_arg
+        ident_list ident_list_arg dot_separated_list
 
 %type <var_type>
         option_type opt_var_type opt_var_ident_type
@@ -9427,6 +9428,7 @@ simple_expr:
         | function_call_nonkeyword
         | function_call_generic
         | function_call_conflict
+        | protobuf_selector
         | simple_expr COLLATE_SYM ident_or_text %prec NEG
           {
             $$= NEW_PTN Item_func_set_collation(@$, $1, $3);
@@ -10285,6 +10287,46 @@ when_list:
           {
             $1->push_back($3);
             $1->push_back($5);
+            $$= $1;
+          }
+        ;
+
+/* Protobuf extract selector. The rules below are for syntax like:
+   SELECT proto_col[field1.field2] from t;
+
+   In order to keep things consistent with the function calls, we're mapping
+   the syntax here onto a call of "proto_extract".
+*/
+protobuf_selector:
+          simple_ident_q '[' dot_separated_list ']'
+          {
+            const LEX_STRING lexstr= { C_STRING_WITH_LEN("proto_extract") };
+            $3->push_front($1);
+            $$= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
+          }
+        | ident '[' dot_separated_list ']'
+          {
+            const LEX_STRING lexstr= { C_STRING_WITH_LEN("proto_extract") };
+            $3->push_front(NEW_PTN PTI_simple_ident_ident(@$, $1));
+            $$= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
+          }
+        ;
+
+dot_separated_list:
+          ident
+          {
+            $$= NEW_PTN PT_item_list;
+
+            if ($$ == NULL || $$->push_back(NEW_PTN PTI_text_literal_text_string(@$,
+                          YYTHD->m_parser_state->m_lip.text_string_is_7bit(), $1)))
+              MYSQL_YYABORT;
+          }
+        | dot_separated_list '.' ident
+          {
+            if ($1 == NULL || $1->push_back(NEW_PTN PTI_text_literal_text_string(@$,
+                          YYTHD->m_parser_state->m_lip.text_string_is_7bit(), $3)))
+
+              MYSQL_YYABORT;
             $$= $1;
           }
         ;

@@ -27,29 +27,53 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
     return false;
   }
 
-  String *proto_path, val, dot;
-  int offset = 0, dot_start;
-
-  dot.append(".");
-  proto_path= args[1]->val_str(&val);
-  proto_path->append(".");
-  dot_start = proto_path->strstr(dot, offset);
-
-  while (dot_start > 0)
+  if (arg_count == 2)
   {
-    String proto_field = proto_path->substr(offset, dot_start - offset);
+    String *proto_path, val, dot;
+    int offset= 0, dot_start;
 
-    if (wr->extract(&proto_field) == false)
+    dot.append(".");
+    proto_path= args[1]->val_str(&val);
+    proto_path->append(".");
+    dot_start= proto_path->strstr(dot, offset);
+
+    while (dot_start > 0)
     {
-      my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field.c_ptr(),
-               args[0]->full_name());
-      proto_path->chop();
-      return false;
+      String proto_field= proto_path->substr(offset, dot_start - offset);
+
+      if (wr->extract(&proto_field) == false)
+      {
+        my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field.c_ptr(),
+                 args[0]->full_name());
+        proto_path->chop();
+        return false;
+      }
+      offset= dot_start + 1;
+      dot_start= proto_path->strstr(dot, offset);
     }
-    offset = dot_start + 1;
-    dot_start = proto_path->strstr(dot, offset);
+    proto_path->chop();
   }
-  proto_path->chop();
+  else
+  {
+    for (uint32 i= 1; i< arg_count; i++)
+    {
+      String *proto_field, val;
+      proto_field= args[i]->val_str(&val);
+
+      if (!proto_field)
+      {
+        my_error(ER_INVALID_PROTO_FIELD, MYF(0), "NULL",
+                 args[0]->full_name());
+        return false;
+      }
+      if (wr->extract(proto_field) == false)
+      {
+        my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field->c_ptr(),
+                 args[0]->full_name());
+        return false;
+      }
+    }
+  }
   return true;
 }
 
