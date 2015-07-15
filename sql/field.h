@@ -4298,6 +4298,7 @@ public:
   const char *change;			// If done with alter table
   const char *after;			// Put column after this one
   LEX_STRING comment;			// Comment for field
+  LEX_STRING protobuf_def;		// Protobuf definition
 
   /**
      The declared default value, if any, otherwise NULL. Note that this member
@@ -4360,9 +4361,9 @@ public:
   bool init(THD *thd, const char *field_name, enum_field_types type,
             const char *length, const char *decimals, uint type_modifier,
             Item *default_value, Item *on_update_value, LEX_STRING *comment,
-            const char *change, List<String> *interval_list,
-            const CHARSET_INFO *cs, uint uint_geom_type,
-            Generated_column *gcol_info= NULL);
+            LEX_STRING *protobuf_def, const char *change,
+            List<String> *interval_list, const CHARSET_INFO *cs,
+            uint uint_geom_type, Generated_column *gcol_info= NULL);
 
   ha_storage_media field_storage_type() const
   {

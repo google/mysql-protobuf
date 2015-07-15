@@ -6299,7 +6299,7 @@ field_spec:
             if (add_field_to_list(lex->thd, &$1, (enum enum_field_types) $3,
                                   lex->length,lex->dec,lex->type,
                                   lex->default_value, lex->on_update_value,
-                                  &lex->comment,
+                                  &lex->comment, &lex->protobuf_def,
                                   lex->change,&lex->interval_list,lex->charset,
                                   lex->uint_geom_type,
                                   lex->gcol_info))
@@ -6684,9 +6684,10 @@ type:
             Lex->charset=&my_charset_bin;
             $$=MYSQL_TYPE_JSON;
           }
-        | PROTOBUF_SYM
+        | PROTOBUF_SYM TEXT_STRING_sys
           {
             Lex->charset=&my_charset_bin;
+            Lex->protobuf_def = $2;
             $$=MYSQL_TYPE_PROTOBUF;
           }
         ;
@@ -8129,7 +8130,7 @@ alter_list_item:
                                   (enum enum_field_types) $5,
                                   lex->length,lex->dec,lex->type,
                                   lex->default_value, lex->on_update_value,
-                                  &lex->comment,
+                                  &lex->comment, &lex->protobuf_def,
                                   $3.str, &lex->interval_list, lex->charset,
                                   lex->uint_geom_type,
                                   lex->gcol_info))

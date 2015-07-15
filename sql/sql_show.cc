@@ -33,6 +33,7 @@
 #include "mysqld_thd_manager.h"             // Global_THD_manager
 #include "opt_trace.h"                      // fill_optimizer_trace_info
 #include "protocol.h"                       // Protocol
+#include "proto_manager.h"                  // Proto_manager
 #include "sp.h"                             // MYSQL_PROC_FIELD_DB
 #include "sp_head.h"                        // sp_head
 #include "sql_audit.h"                      // audit_global_variable_get
@@ -1530,6 +1531,30 @@ int store_create_info(THD *thd, TABLE_LIST *table_list, String *packet,
         (field_type == MYSQL_TYPE_TIME || field_type == MYSQL_TYPE_DATETIME ||
          field_type == MYSQL_TYPE_TIMESTAMP))
       type.append(" /* 5.5 binary format */");
+
+    if (field->type() == MYSQL_TYPE_PROTOBUF)
+    {
+      Proto_manager& proto_mgr = Proto_manager::get_singleton();
+      String file_path, fld_name, proto_def;
+
+      file_path.append(&table->s->db);
+      file_path.append("/");
+      file_path.append(*field->table_name);
+      fld_name.append(field->field_name);
+
+      if (proto_mgr.get_definition(&file_path, &fld_name,
+                                   &field->table->mem_root, &proto_def))
+      {
+        DBUG_PRINT("error", ("Error getting proto definition for column %s",
+                             field->field_name));
+      }
+      else
+      {
+        type.append(" '");
+        type.append(proto_def.ptr(), proto_def.length(), system_charset_info);
+        type.append("' ");
+      }
+    }
     packet->append(type.ptr(), type.length(), system_charset_info);
 
     if (field->has_charset() && 
@@ -5244,6 +5269,25 @@ static int get_schema_column_record(THD *thd, TABLE_LIST *tables,
     table->field[IS_COLUMNS_COLUMN_KEY]->store((const char*) pos,
                             strlen((const char*) pos), cs);
 
+    if (field->type() == MYSQL_TYPE_PROTOBUF)
+    {
+      Proto_manager& proto_mgr = Proto_manager::get_singleton();
+      String file_path, fld_name, proto_def;
+
+      file_path.append(field->orig_table->s->db);
+      file_path.append("/");
+      file_path.append(field->orig_table->s->table_name);
+      fld_name.append(field->field_name);
+
+      if (proto_mgr.get_definition(&file_path, &fld_name,
+                                   &field->table->mem_root, &proto_def))
+        DBUG_PRINT("error", ("Error getting proto definition for column %s",
+                             field->field_name));
+      else
+        table->field[IS_COLUMNS_PROTOBUF_DEF]->store(proto_def.ptr(),
+                                                     proto_def.length(), cs);
+    }
+
     if (field->unireg_check == Field::NEXT_NUMBER)
       table->field[IS_COLUMNS_EXTRA]->store(STRING_WITH_LEN("auto_increment"),
                                             cs);
@@ -7680,6 +7724,7 @@ int make_columns_old_format(THD *thd, ST_SCHEMA_TABLE *schema_table)
                      IS_COLUMNS_EXTRA,
                      IS_COLUMNS_PRIVILEGES,
                      IS_COLUMNS_COLUMN_COMMENT,
+                     IS_COLUMNS_PROTOBUF_DEF,
                      -1};
   int *field_num= fields_arr;
   ST_FIELD_INFO *field_info;
@@ -7690,7 +7735,8 @@ int make_columns_old_format(THD *thd, ST_SCHEMA_TABLE *schema_table)
     field_info= &schema_table->fields_info[*field_num];
     if (!thd->lex->verbose && (*field_num == IS_COLUMNS_COLLATION_NAME ||
                                *field_num == IS_COLUMNS_PRIVILEGES     ||
-                               *field_num == IS_COLUMNS_COLUMN_COMMENT))
+                               *field_num == IS_COLUMNS_COLUMN_COMMENT ||
+                               *field_num == IS_COLUMNS_PROTOBUF_DEF))
       continue;
     Item_field *field= new Item_field(context,
                                       NullS, NullS, field_info->field_name);
@@ -8204,6 +8250,7 @@ ST_FIELD_INFO columns_fields_info[]=
    "Comment", OPEN_FRM_ONLY},
   {"GENERATION_EXPRESSION", GENERATED_COLUMN_EXPRESSION_MAXLEN, MYSQL_TYPE_STRING,
    0, 0, "Generation expression", OPEN_FRM_ONLY},
+  {"PROTOBUF_DEF", 65535, MYSQL_TYPE_STRING, 0, 0, "Protobuf definition", OPEN_FRM_ONLY},
   {0, 0, MYSQL_TYPE_STRING, 0, 0, 0, SKIP_OPEN_TABLE}
 };
 

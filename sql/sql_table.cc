@@ -3234,7 +3234,7 @@ bool fill_field_definition(THD *thd,
   uint unused1= 0;
 
   if (field_def->init(thd, (char*) "", field_type, lex->length, lex->dec,
-                      lex->type, (Item*) 0, (Item*) 0, &cmt, 0,
+                      lex->type, (Item*) 0, (Item*) 0, &cmt, &cmt, 0,
                       &lex->interval_list,
                       lex->charset ? lex->charset :
                                      thd->variables.collation_database,
@@ -7563,8 +7563,8 @@ upgrade_old_temporal_types(THD *thd, Alter_info *alter_info)
     if (!(temporal_field= new (thd->mem_root) Create_field()) ||
         temporal_field->init(thd, def->field_name, sql_type, NULL, NULL,
                              (def->flags & NOT_NULL_FLAG), default_value,
-                             update_value, &def->comment, def->change, NULL,
-                             NULL, 0, NULL))
+                             update_value, &def->comment, &def->protobuf_def,
+                             def->change, NULL, NULL, 0, NULL))
       DBUG_RETURN(true);
 
     temporal_field->field= def->field;

@@ -95,7 +95,7 @@ bool add_field_to_list(THD *thd, LEX_STRING *field_name, enum enum_field_types t
 		       char *length, char *decimal,
 		       uint type_modifier,
 		       Item *default_value, Item *on_update_value,
-		       LEX_STRING *comment,
+		       LEX_STRING *comment, LEX_STRING *protobuf_def,
 		       char *change, List<String> *interval_list,
 		       const CHARSET_INFO *cs,
 		       uint uint_geom_type,

@@ -10659,6 +10659,7 @@ void Create_field::init_for_tmp_table(enum_field_types sql_type_arg,
   @param fld_default_value     Column default expression (if any.)
   @param fld_on_update_value   The expression in the ON UPDATE clause.
   @param fld_comment           Column comment.
+  @param fld_proto_def         Protobuf definition in case of a PROTOBUF col.
   @param fld_change            Column change.
   @param fld_interval_list     Interval list (if any.)
   @param fld_charset           Column charset.
@@ -10675,8 +10676,8 @@ bool Create_field::init(THD *thd, const char *fld_name,
                         enum_field_types fld_type, const char *fld_length,
                         const char *fld_decimals, uint fld_type_modifier,
                         Item *fld_default_value, Item *fld_on_update_value,
-                        LEX_STRING *fld_comment, const char *fld_change,
-                        List<String> *fld_interval_list,
+                        LEX_STRING *fld_comment, LEX_STRING *fld_proto_def,
+                        const char *fld_change, List<String> *fld_interval_list,
                         const CHARSET_INFO *fld_charset, uint fld_geom_type,
                         Generated_column *fld_gcol_info)
 {
@@ -10744,6 +10745,7 @@ bool Create_field::init(THD *thd, const char *fld_name,
   interval_list.empty();
 
   comment= *fld_comment;
+  protobuf_def = *fld_proto_def;
   gcol_info= fld_gcol_info;
   stored_in_db= TRUE;
 

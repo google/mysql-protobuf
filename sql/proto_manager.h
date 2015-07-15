@@ -67,6 +67,8 @@ public:
               MEM_ROOT *mem_root, String *output);
   bool decode(String *file_path, String *field, String *message,
               MEM_ROOT *mem_root, String *output);
+  bool get_definition(String *file_path, String *field, MEM_ROOT *mem_root,
+                      String *output);
 
  protected:
   google::protobuf::Descriptor *get_descriptor(String *field_path, String *str,

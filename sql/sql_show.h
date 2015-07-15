@@ -57,6 +57,7 @@ enum find_files_result {
 #define IS_COLUMNS_PRIVILEGES                  18
 #define IS_COLUMNS_COLUMN_COMMENT              19
 #define IS_COLUMNS_GENERATION_EXPRESSION       20
+#define IS_COLUMNS_PROTOBUF_DEF                21
 
 /* Define fields' indexes for ROUTINES table of I_S tables */
 #define IS_ROUTINES_SPECIFIC_NAME               0

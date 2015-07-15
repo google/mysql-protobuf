@@ -1143,7 +1143,7 @@ bool make_default_value(THD *thd, TABLE *table, Create_field *field,
 
   if (field->sql_type == MYSQL_TYPE_PROTOBUF)
     {
-      if (field->comment.str == NULL)
+      if (field->protobuf_def.str == NULL)
       {
         my_error(ER_INVALID_PROTO_DEFINITION, MYF(0),
                  "definition can't be null", regfield->field_name);
@@ -1152,7 +1152,7 @@ bool make_default_value(THD *thd, TABLE *table, Create_field *field,
       }
       String proto_def;
       proto_def.length(0);
-      proto_def.append(field->comment.str, field->comment.length);
+      proto_def.append(field->protobuf_def.str, field->protobuf_def.length);
       Proto_manager &proto_mgr= Proto_manager::get_singleton();
 
       String field_path, field_name;
@@ -1165,7 +1165,7 @@ bool make_default_value(THD *thd, TABLE *table, Create_field *field,
                                    &field_name, thd->mem_root) == false)
       {
         my_error(ER_INVALID_PROTO_DEFINITION, MYF(0),
-                 field->comment.str, regfield->field_name);
+                 field->protobuf_def.str, regfield->field_name);
         delete regfield;
         return true;
       }

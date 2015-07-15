@@ -450,3 +450,18 @@ bool Proto_wrapper::to_text_only_vals(String *val_ptr)
   return true;
 }
 
+// Write the proto definition to "output".
+bool Proto_manager::get_definition(String *file_path, String *field,
+                                   MEM_ROOT *mem_root, String *output)
+{
+  file_path->append(PROTO_FILE_EXTENSION);
+
+  LEX_STRING file_name = file_path->lex_string();
+  struct proto_file_data data;
+
+  DBUG_ASSERT(read_proto_file(&data, &file_name, mem_root));
+  DBUG_ASSERT(find_proto_definition(&data, field, output));
+
+  return false;
+}
+

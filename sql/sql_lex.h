@@ -3002,7 +3002,7 @@ public:
   sql_exchange *exchange;
   Query_result *result;
   Item *default_value, *on_update_value;
-  LEX_STRING comment, ident;
+  LEX_STRING comment, ident, protobuf_def;
   LEX_USER *grant_user;
   LEX_ALTER alter_password;
   THD *thd;
