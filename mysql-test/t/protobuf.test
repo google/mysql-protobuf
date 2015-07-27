@@ -1,0 +1,212 @@
+--echo # Test of the PROTOBUF data type.
+--echo # ----------------------------------------------------------------------
+
+# PROTOBUF is a non-reserved keyword, so it should be possible to use it
+# as an identifier.
+CREATE TABLE protobuf(protobuf int);
+INSERT INTO protobuf(protobuf) VALUES (1);
+SELECT protobuf FROM protobuf;
+DROP TABLE protobuf;
+
+--error ER_INVALID_PROTO_DEFINITION
+CREATE TABLE t1 (p protobuf "");
+
+--error ER_INVALID_PROTO_DEFINITION
+CREATE TABLE t1 (p protobuf "message M { optional string s = 1;");  # open curly brace
+
+CREATE TABLE t1 (i INT, p protobuf "message Person {
+  optional int64 id = 1;
+  optional string name = 2;
+
+  message PhoneNumber {
+    optional string number = 1;
+    optional string other = 2;
+  }
+
+  message Address {
+    optional int32 number = 1;
+    optional string street = 2;
+    optional int32 zipcode = 3;
+  }
+
+  message Info {
+    optional PhoneNumber phone = 1;
+    optional Address address = 2;
+  }
+
+  optional Info info = 3;
+
+  }") ENGINE=InnoDB;
+
+SHOW CREATE TABLE t1;
+
+INSERT INTO t1 VALUES(0, 'id: 0 name: "Alice"');
+INSERT INTO t1 VALUES(1, 'name: "Bob"');
+INSERT INTO t1 VALUES(2, 'id: 2
+                          name: "Charlie"
+                          info {
+                            phone { number: "123" other: "321" }
+                         }
+                         ');
+
+INSERT INTO t1 VALUES(3, 'id: 3
+                          name: "Dean"
+                          info {
+                            phone { number: "123" other: "3" }
+                            address { number: 1901 zipcode: 94043 }
+                         }
+                         ');
+
+INSERT INTO t1 VALUES(4, 'id: 4
+                          name: "Emma"
+                          info {
+                            phone { number: "444" other: "650-444" }
+                            address { number: 1901 zipcode: 94043 street: "Rock St"}
+                         }
+                         ');
+
+INSERT INTO t1 VALUES(5, 'id: 5
+                          name: "Incognito"
+                          info { phone{} address{} }
+                         ');
+
+INSERT INTO t1 VALUES(6, 'info {}');
+INSERT INTO t1 VALUES(7, '');
+INSERT INTO t1 VALUES(8, NULL);
+
+# some sanity checks for INSERT
+--error ER_INVALID_PROTO_TEXT
+INSERT INTO t1 VALUES(0, 42);
+--error ER_INVALID_PROTO_TEXT
+INSERT INTO t1 VALUES(0, true);
+--error ER_INVALID_PROTO_TEXT
+INSERT INTO t1 VALUES(0, "random text");
+--error ER_INVALID_PROTO_TEXT
+INSERT INTO t1 VALUES(0, "name: 42");
+
+# do a shallow check of all data
+SELECT * from t1;
+
+# check each protobuf field
+SELECT p[id] from t1;
+SELECT p[name] from t1;
+SELECT p[info] from t1;
+SELECT p[info.phone] from t1;
+SELECT p[info.address] from t1;
+SELECT p[info.phone.number] from t1;
+SELECT p[info.phone.other] from t1;
+SELECT p[info.address.number] from t1;
+SELECT p[info.address.street] from t1;
+SELECT p[info.address.zipcode] from t1;
+
+# check NULL comparisons or empty protos
+SELECT * from t1 where p[id] is NULL;
+SELECT * from t1 where p[info] is NULL;
+SELECT * from t1 where p[info] = '';
+SELECT * from t1 where p[info.address.zipcode] is not NULL;
+SELECT * from t1 where p = NULL;
+SELECT * from t1 where p[info] = NULL;
+
+# check string comparisons
+SELECT * from t1 where p[name] = "Alice";
+SELECT * from t1 where p[name] > "Dean";
+SELECT * from t1 where p[id] = "5";
+SELECT * from t1 where p[info.address.number] = "1901";
+
+# check number comparisons
+SELECT * from t1 where p[id] = 5;
+SELECT * from t1 where p[info.address.number] = 1901;
+
+# check self comparisons
+SELECT * from t1 where p[id] = p[id];
+SELECT * from t1 where p[info] = p[info];
+SELECT * from t1 where p[id] = p[info.phone.other];
+
+# invalid field checks
+--error ER_INVALID_PROTO_FIELD
+SELECT p[random_text] from t1;
+--error ER_INVALID_PROTO_FIELD
+SELECT p[`where`] from t1;
+
+# proto_extract tests
+SELECT proto_extract(p, "id") from t1;
+SELECT proto_extract(p, "info.address.zipcode") from t1;
+SELECT proto_extract(p, "info", "address") from t1;
+SELECT proto_extract(p, NULL) from t1;
+SELECT proto_extract(p, "") from t1;
+
+--error ER_INVALID_PROTO_FIELD
+SELECT proto_extract(p, "random_text") from t1;
+--error ER_INVALID_PROTO_FIELD
+SELECT proto_extract(p, "info.address.zipcode.") from t1;
+--error ER_INVALID_PROTO_FIELD
+SELECT proto_extract(p, "info", "address", "") from t1;
+--error ER_INVALID_PROTO_FIELD
+SELECT proto_extract(p, "info", "address", NULL) from t1;
+
+# check some simple updates
+UPDATE t1 SET p = 'id: 7 name: "George"
+                   info { phone { number: "777" other: "7" }
+                          address { street: "Amph Pkwy" zipcode: 12345 number: 1600 }
+                        }' where i = 7;
+
+UPDATE t1 SET p = 'id: 8 name: "Harry"
+                   info { phone { number: "888" other: "8" }
+                          address { street: "Amph Pkwy" zipcode: 12345 number: 1600 }
+                        }' where i = 8;
+
+SELECT * from t1 where i >= 7;
+
+# specific protobuf fields updates
+UPDATE t1 SET p[name] = "Henrietta" where p[name] = "Harry";
+UPDATE t1 SET p[info.phone.number] = "898989" where p[name] = "Henrietta";
+SELECT * from t1 where i >= 7;
+
+# delete simple fields
+UPDATE t1 SET p[info.address.street] = NULL where p[name] = "George";
+UPDATE t1 SET p[info.phone.number] = NULL where p[name] = "Henrietta";
+SELECT * from t1 where i >= 7;
+
+# delete whole subprotos
+UPDATE t1 SET p[info] = NULL where p[name] = "George";
+UPDATE t1 SET p[info.phone] = NULL where p[name] = "Henrietta";
+SELECT * from t1 where i >= 7;
+
+# update subprotos
+UPDATE t1 SET p[info] = 'address { zipcode: 94043} phone {}' where p[name] = "George";
+UPDATE t1 SET p[info.phone] = 'number: "1234"' where p[name] = "Henrietta";
+SELECT * from t1 where i >= 7;
+
+--error ER_INVALID_PROTO_FIELD
+UPDATE t1 SET p[info.random_field] = "" where p[name] = "George";
+--error ER_INVALID_PROTO_FIELD
+UPDATE t1 SET p[info.phone.a] = 123 where p[name] = "George";
+--error ER_INVALID_PROTO_TEXT
+UPDATE t1 SET p[info] = "wrong protobuf" where p[name] = "George";
+--error ER_INVALID_PROTO_TEXT
+UPDATE t1 SET p[info.address] = 123 where p[name] = "George";
+--error ER_INVALID_PROTO_TEXT
+UPDATE t1 SET p[info.address] = p[info] where p[name] = "Henrietta";
+--error ER_INVALID_PROTO_VALUE_FOR_CAST
+UPDATE t1 SET p[info.address.zipcode] = p where p[name] = "Henrietta";
+
+# check indirect NULL assignments
+SELECT * from t1 where i >= 7;
+UPDATE t1 SET p[info] = NULL where p[name] = "George";
+SELECT * from t1 where i >= 7;
+UPDATE t1 SET p[info] = p[info] where p[name] = "George";
+SELECT * from t1 where i >= 7;
+UPDATE t1 SET p[info.phone] = p[info.phone] where p[name] = "Henrietta";
+SELECT * from t1 where i >= 7;
+UPDATE t1 SET p[info.phone] = p[info.address] where p[name] = "George";
+SELECT * from t1 where i >= 7;
+
+DROP TABLE t1;
+
+# Local Variables:
+# mode: sql
+# sql-product: mysql
+# comment-column: 48
+# comment-start: "# "
+# fill-column: 80
+# End:
