@@ -2439,6 +2439,19 @@ protected:
   virtual ~Create_func_protobuf_extract() {}
 };
 
+class Create_func_protobuf_update : public Create_native_func
+{
+public:
+  virtual Item *create_native(THD *thd, LEX_STRING name,
+                              PT_item_list *item_list);
+
+  static Create_func_protobuf_update s_singleton;
+
+protected:
+  Create_func_protobuf_update() {}
+  virtual ~Create_func_protobuf_update() {}
+};
+
 class Create_func_json_valid : public Create_func_arg1
 {
 public:
@@ -5723,6 +5736,30 @@ Create_func_protobuf_extract::create_native(THD *thd, LEX_STRING name,
   return func;
 }
 
+Create_func_protobuf_update Create_func_protobuf_update::s_singleton;
+
+Item*
+Create_func_protobuf_update::create_native(THD *thd, LEX_STRING name,
+                                           PT_item_list *item_list)
+{
+  Item* func= NULL;
+  int arg_count= 0;
+
+  if (item_list != NULL)
+    arg_count= item_list->elements();
+
+  if (arg_count < 3)
+  {
+    my_error(ER_WRONG_PARAMCOUNT_TO_NATIVE_FCT, MYF(0), name.str);
+  }
+  else
+  {
+    func= new (thd->mem_root) Item_func_protobuf_update(POS(), item_list);
+  }
+
+  return func;
+}
+
 Create_func_json_valid Create_func_json_valid::s_singleton;
 
 Item*
@@ -7647,6 +7684,7 @@ static Native_func_registry func_array[] =
   { { C_STRING_WITH_LEN("POW") }, BUILDER(Create_func_pow)},
   { { C_STRING_WITH_LEN("POWER") }, BUILDER(Create_func_pow)},
   { { C_STRING_WITH_LEN("PROTO_EXTRACT") }, BUILDER(Create_func_protobuf_extract)},
+  { { C_STRING_WITH_LEN("PROTOBUF_UPDATE") }, BUILDER(Create_func_protobuf_update)},
   { { C_STRING_WITH_LEN("QUOTE") }, BUILDER(Create_func_quote)},
   { { C_STRING_WITH_LEN("RADIANS") }, BUILDER(Create_func_radians)},
   { { C_STRING_WITH_LEN("RAND") }, BUILDER(Create_func_rand)},

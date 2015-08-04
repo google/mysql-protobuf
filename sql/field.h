@@ -3929,6 +3929,7 @@ public:
                                const CHARSET_INFO *charset);
   type_conversion_status store(double nr);
   type_conversion_status store(longlong nr, bool unsigned_val);
+  type_conversion_status store(Field_proto *field);
   type_conversion_status store_decimal(const my_decimal *);
   type_conversion_status store_time(MYSQL_TIME *ltime, uint8 dec_arg);
 

@@ -9146,12 +9146,7 @@ type_conversion_status Field_proto::store(const char *from, size_t length,
   DBUG_ENTER("Field_proto::store");
   ASSERT_COLUMN_MARKED_FOR_WRITE;
 
-  const char *s;
-  size_t ss;
   String v(from, length, cs);
-
-  if (ensure_utf8mb4(&v, &value, &s, &ss, true))
-    DBUG_RETURN(TYPE_ERR_BAD_VALUE);
 
   value.length(0);
   value.set_charset(&my_charset_bin);
@@ -9216,6 +9211,35 @@ type_conversion_status Field_proto::store_decimal(const my_decimal *)
 type_conversion_status Field_proto::store_time(MYSQL_TIME *ltime, uint8 dec_arg)
 {
   return unsupported_conversion();
+}
+
+/**
+  Copy the contents of a non-null PROTOBUF field into this field.
+
+  @param[in] field the field to copy data from
+  @return zero on success, non-zero on failure
+*/
+type_conversion_status Field_proto::store(Field_proto *field)
+{
+  DBUG_ENTER("Field_proto::store(Field_proto *)");
+  ASSERT_COLUMN_MARKED_FOR_WRITE;
+  DBUG_ASSERT(!field->is_null());
+
+  Proto_wrapper other_wr;
+
+  DBUG_ASSERT(field->val_proto(&other_wr));
+
+  String result;
+  result.length(0);
+
+  if (!other_wr.isNull())
+  {
+    String buf;
+    DBUG_ASSERT(other_wr.to_text(&buf));
+    DBUG_RETURN(store(buf.ptr(), buf.length(), buf.charset()));
+  }
+  store_ptr_and_length(result.ptr(), static_cast<uint32>(result.length()));
+  DBUG_RETURN(TYPE_OK);
 }
 
 String *Field_proto::val_str(String *tmp, String *val_ptr)

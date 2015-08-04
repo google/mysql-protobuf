@@ -342,6 +342,177 @@ bool Proto_wrapper::extract(String *field)
   return false;
 }
 
+bool update_message(Message *message, String *inner_msg, Item *value)
+{
+  const Descriptor *desc = message->GetDescriptor();
+  std::string field_name(inner_msg->c_ptr());
+  const FieldDescriptor *fdesc = desc->FindFieldByName(field_name);
+
+  if (!fdesc)
+    return true;
+
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+
+  String *val, buf;
+  val = value->val_str(&buf);
+
+  if (value->type() == Item::NULL_ITEM || !val)
+  {
+    Message *m = refl->ReleaseMessage(message, fdesc);
+    if (m)
+      delete m;
+  }
+  else
+  {
+    std::stringstream ss(std::string(val->c_ptr(),
+                                     val->c_ptr() + val->length()));
+    io::IstreamInputStream iis(&ss, -1);
+    Message *mutable_msg = refl->MutableMessage(message, fdesc);
+    DBUG_ASSERT(mutable_msg);
+
+    if (TextFormat::Parse(&iis, mutable_msg) == false)
+    {
+      DBUG_PRINT("error", ("Text format parse error."));
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool update_field(Message *message, const FieldDescriptor *fdesc, Item *value)
+{
+  const Reflection *refl = message->GetReflection();
+
+  if (value->type() == Item::NULL_ITEM)
+  {
+    refl->ClearField(message, fdesc);
+    return false;
+  }
+
+  switch (fdesc->type())
+  {
+    case FieldDescriptor::TYPE_STRING:
+    {
+      String *val, buf;
+      val = value->val_str(&buf);
+      std::string val_str(val->c_ptr());
+      refl->SetString(message, fdesc, val_str);
+      break;
+    }
+    case FieldDescriptor::TYPE_DOUBLE:
+      refl->SetDouble(message, fdesc, value->val_real());
+      break;
+    case FieldDescriptor::TYPE_FLOAT:
+      refl->SetFloat(message, fdesc, (float)value->val_real());
+      break;
+    case FieldDescriptor::TYPE_INT32:
+      refl->SetInt32(message, fdesc, (int32_t)value->val_int());
+      break;
+    case FieldDescriptor::TYPE_INT64:
+      refl->SetInt64(message, fdesc, (int64_t)value->val_int());
+      break;
+    case FieldDescriptor::TYPE_UINT32:
+      refl->SetUInt32(message, fdesc, (uint32_t)value->val_uint());
+      break;
+    case FieldDescriptor::TYPE_UINT64:
+      refl->SetUInt64(message, fdesc, (uint64_t)value->val_uint());
+      break;
+    case FieldDescriptor::TYPE_BOOL:
+      refl->SetBool(message, fdesc, value->val_bool());
+      break;
+    default:
+    {
+      DBUG_PRINT("error", ("Couldn't update field: %s\n",
+                           fdesc->name().c_str()));
+      return true;
+    }
+  }
+  return false;
+}
+
+Message *update_top_level(Message *message, String *field, Item *value)
+{
+  // Check if the field is defined in the proto definition.
+  const Descriptor *desc = message->GetDescriptor();
+  std::string field_name(field->c_ptr());
+  const FieldDescriptor *fdesc = desc->FindFieldByName(field_name);
+
+  if (!fdesc)
+    return NULL;
+
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+
+  if (fdesc->type() == FieldDescriptor::TYPE_MESSAGE)
+    return refl->MutableMessage(message, fdesc);
+
+  if (update_field(message, fdesc, value))
+    return NULL;
+
+  return message;
+}
+
+bool Proto_wrapper::update(List<String> *field_path, Item *value)
+{
+  List_iterator_fast<String> it_path(*field_path);
+  Message *current_msg = message;
+  Message *parent = NULL;
+  String *field, *save_fld_name;
+
+  /**
+   * TODO(fanton): Remove the use of save_fld_name/parent variables.
+   * Currently we need this in a very specific case, that when the
+   * field_path ends up on an inner message, not a primitive type. We
+   * need to keep that message name, in order to have access to its
+   * FieldDescriptor inside the 'parent' message (which is also only
+   * needed only in this case.
+   */
+  while (true) {
+    save_fld_name = field;
+    field = it_path++;
+    if (!field)
+      break;
+
+    Message *msg = update_top_level(current_msg, field, value);
+    if (msg == current_msg)
+      return false;
+    else if (msg == NULL)
+      return true;
+    else
+    {
+      parent = current_msg; // Keep a pointer to the container message.
+      current_msg = msg;
+    }
+  }
+
+  if (parent)
+  {
+    /**
+     * If we are here, it means that the path was valid, but we didn't end
+     * up on a primitive Protobuf type, so there's must be an inner message
+     * to update.
+     */
+    if (update_message(parent, save_fld_name, value))
+    {
+      String *val, buf;
+      val = value->val_str(&buf);
+
+      if (val)
+        my_error(ER_INVALID_PROTO_TEXT, MYF(0),
+                 "not a PROTOBUF text, may need CAST", 0, val->c_ptr());
+      else
+        my_error(ER_INVALID_PROTO_TEXT, MYF(0),
+                 "not a PROTOBUF text, may need CAST", 0, "NULL");
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
 bool Proto_wrapper::to_text(String *val_ptr)
 {
   std::string out_str;

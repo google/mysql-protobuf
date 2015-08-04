@@ -90,6 +90,60 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
   return true;
 }
 
+bool Item_func_protobuf_update::val_proto(Proto_wrapper *wr)
+{
+
+  if (args[0]->null_value || args[1]->null_value)
+  {
+    null_value= true;
+    wr->setNull();
+    return true;
+  }
+
+  if (args[0]->field_type() != MYSQL_TYPE_PROTOBUF)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), args[0]->full_name());
+    return false;
+  }
+
+  if (args[0]->val_proto(wr) == false)
+  {
+    DBUG_PRINT("error", ("Error converting to val_proto: %s",
+                args[0]->full_name()));
+    return false;
+  }
+
+  List<String> field_path;
+  for (uint32 i = 1; i< arg_count - 1; i++)
+  {
+    String *val, buf2;
+
+    val = args[i]->val_str(&buf2);
+    field_path.push_back(val);
+  }
+
+  if (wr->update(&field_path, args[arg_count - 1]))
+  {
+    String fpath;
+    List_iterator_fast<String> it_path(field_path);
+    while (true)
+    {
+      String *field= it_path++;
+      if (!field)
+        break;
+      fpath.append(field->c_ptr(), field->length());
+      fpath.append(".");
+    }
+    fpath.chop();
+
+    my_error(ER_INVALID_PROTO_FIELD, MYF(0), fpath.c_ptr(),
+             args[0]->full_name());
+    return false;
+  }
+
+  return true;
+}
+
 double Item_proto_func::val_real()
 {
   Proto_wrapper wr;
@@ -147,10 +201,7 @@ String *Item_proto_func::val_str(String *str)
     return str;
   }
 
-  if (val_proto(&wr) == false)
-    DBUG_RETURN(NULL);
-
-  if (wr.isNull())
+  if (val_proto(&wr) == false || wr.isNull())
   {
     null_value= true;
     DBUG_RETURN(NULL);

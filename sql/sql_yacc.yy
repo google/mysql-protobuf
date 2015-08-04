@@ -11618,6 +11618,22 @@ update_elem:
             $$.column= $1;
             $$.value= $3;
           }
+        | ident '[' dot_separated_list ']' equal expr_or_default
+          {
+            const LEX_STRING lexstr= { C_STRING_WITH_LEN("protobuf_update") };
+            $$.column= NEW_PTN PTI_simple_ident_ident(@$, $1);
+            $3->push_front(NEW_PTN PTI_simple_ident_ident(@$, $1));
+            $3->push_back($6);
+
+            $$.value= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
+          }
+        /* 
+        | simple_ident_q '[' dot_separated_list ']' equal expr_or_default
+          {
+            TODO(fanton): Make this work.
+            $$.value= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
+          }
+         */
         ;
 
 opt_low_priority:

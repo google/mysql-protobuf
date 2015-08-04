@@ -900,6 +900,13 @@ type_conversion_status field_conv(Field *to,Field *from)
     return to_json->store(from_json);
   }
 
+  if ((to_type == MYSQL_TYPE_PROTOBUF) && (from_type == MYSQL_TYPE_PROTOBUF))
+  {
+    Field_proto *to_protobuf= down_cast<Field_proto*>(to);
+    Field_proto *from_protobuf= down_cast<Field_proto*>(from);
+    return to_protobuf->store(from_protobuf);
+  }
+
   if (to->real_type() == from->real_type() &&
       !((is_blob_type(to)) &&
         to->table->copy_blobs) && to->charset() == from->charset())
