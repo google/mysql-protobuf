@@ -33,6 +33,8 @@
 #include "pfs_file_provider.h"
 #include "mysql/psi/mysql_file.h"
 
+#include "proto_manager.h"                    // Proto_manager
+
 #include <algorithm>
 
 using std::min;
@@ -1136,6 +1138,29 @@ bool make_default_value(THD *thd, TABLE *table, Create_field *field,
 
   if (field->sql_type == MYSQL_TYPE_BIT && !f_bit_as_char(field->pack_flag))
     (*null_count)+= field->length & 7;
+
+  if (field->sql_type == MYSQL_TYPE_PROTOBUF)
+    {
+      if (field->comment.str == NULL)
+      {
+        my_error(ER_INVALID_PROTO_DEFINITION, MYF(0),
+                 "definition can't be null", regfield->field_name);
+        delete regfield;
+        return true;
+      }
+      String proto_def;
+      proto_def.length(0);
+      proto_def.append(field->comment.str, field->comment.length);
+      Proto_manager &proto_mgr= Proto_manager::get_singleton();
+
+      if (proto_mgr.proto_is_valid(&proto_def) == false)
+      {
+        my_error(ER_INVALID_PROTO_DEFINITION, MYF(0),
+                 field->comment.str, regfield->field_name);
+        delete regfield;
+        return true;
+      }
+    }
 
   Field::utype type= (Field::utype) MTYP_TYPENR(field->unireg_check);
 

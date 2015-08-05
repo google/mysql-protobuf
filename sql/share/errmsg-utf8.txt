@@ -7606,6 +7606,9 @@ ER_CANT_WAIT_FOR_EXECUTED_GTID_SET_WHILE_OWNING_A_GTID
 ER_INVALID_PROTO_TEXT 22032
   eng "Invalid PROTO text: \"%s\" at position %u in value (or column) '%-.200s'."
 
+ER_INVALID_PROTO_DEFINITION 22032
+  eng "Invalid PROTO definition: '%s' for column '%-.200s'."
+
 #
 #  End of 5.7 error messages.
 #

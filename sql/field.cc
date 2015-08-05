@@ -27,6 +27,7 @@
 
 #include "filesort.h"                    // change_double_for_sort
 #include "item_timefunc.h"               // Item_func_now_local
+#include "proto_manager.h"               // Proto_manager
 #include "json_binary.h"                 // json_binary::serialize
 #include "json_dom.h"                    // Json_dom, Json_wrapper
 #include "item_json_func.h"              // ensure_utf8mb4
@@ -9148,17 +9149,28 @@ type_conversion_status Field_proto::store(const char *from, size_t length,
   const char *s;
   size_t ss;
   String v(from, length, cs);
+  String proto_def;
 
   if (ensure_utf8mb4(&v, &value, &s, &ss, true))
     DBUG_RETURN(TYPE_ERR_BAD_VALUE);
 
+  proto_def.length(0);
+  proto_def.append(comment.str, comment.length);
+
   value.length(0);
   value.set_charset(&my_charset_bin);
 
-  // For now, we just add some text at the beginning of the text came
-  // from the upper layers.
-  value.append("Future encoded proto: ");
-  value.append(from, length);
+  Proto_manager& proto_mgr = Proto_manager::get_singleton();
+  String field_path;
+  field_path.append(*table_name);
+  field_path.append('.');
+  field_path.append(field_name);
+
+  if (proto_mgr.encode(&field_path, &v, &proto_def, &value))
+  {
+    DBUG_PRINT("error", ("Proto encoding failed: %s", v.c_ptr()));
+    DBUG_RETURN(unsupported_conversion());
+  }
 
   store_ptr_and_length(value.ptr(), static_cast<uint32>(value.length()));
   DBUG_RETURN(TYPE_OK);
@@ -9211,15 +9223,24 @@ type_conversion_status Field_proto::store_time(MYSQL_TIME *ltime, uint8 dec_arg)
 
 String *Field_proto::val_str(String *tmp, String *val_ptr)
 {
+  String proto_def;
+  Proto_manager& proto_mgr = Proto_manager::get_singleton();
   DBUG_ENTER("Field_proto::val_str");
   ASSERT_COLUMN_MARKED_FOR_READ;
 
-  tmp->length(0);
-  val_ptr= Field_blob::val_str(tmp, tmp);
+  proto_def.length(0);
+  proto_def.append(comment.str, comment.length);
 
-  // For the moment, just delete the 22 characters added in the store
-  // method.
-  val_ptr->replace(0, 22, "", 0);
+  tmp->length(0);
+
+  String field_path;
+  field_path.append(*table_name);
+  field_path.append('.');
+  field_path.append(field_name);
+
+  tmp= Field_blob::val_str(tmp, tmp);
+  if (proto_mgr.decode(&field_path, tmp, &proto_def, val_ptr))
+    DBUG_PRINT("error", ("Proto decoding failed: %s", tmp->c_ptr()));
 
   DBUG_RETURN(val_ptr);
 }
