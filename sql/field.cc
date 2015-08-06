@@ -9150,7 +9150,7 @@ type_conversion_status Field_proto::store(const char *from, size_t length,
   String v(from, length, cs);
 
   if (ensure_utf8mb4(&v, &value, &s, &ss, true))
-    return TYPE_ERR_BAD_VALUE;
+    DBUG_RETURN(TYPE_ERR_BAD_VALUE);
 
   value.length(0);
   value.set_charset(&my_charset_bin);

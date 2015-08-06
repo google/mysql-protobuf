@@ -25,6 +25,7 @@
 #include "item_create.h"     // create_temporal_literal
 #include "item_func.h"       // item_func_sleep_init
 #include "item_json_func.h"  // json_value
+#include "item_proto_func.h" // proto_value
 #include "item_strfunc.h"    // Item_func_conv_charset
 #include "item_sum.h"        // Item_sum
 #include "json_dom.h"        // Json_wrapper
@@ -7439,7 +7440,6 @@ bool Item::send(Protocol *protocol, String *buffer)
   case MYSQL_TYPE_VARCHAR:
   case MYSQL_TYPE_BIT:
   case MYSQL_TYPE_NEWDECIMAL:
-  case MYSQL_TYPE_PROTOBUF: // TODO(fanton): create a proto wrapper
   case MYSQL_TYPE_JSON:
   {
     String *res;
@@ -7448,6 +7448,19 @@ bool Item::send(Protocol *protocol, String *buffer)
     else
     {
       DBUG_ASSERT(null_value);
+    }
+    break;
+  }
+  case MYSQL_TYPE_PROTOBUF: // TODO(fanton): create a proto wrapper
+  {
+    Item *args[] = {this};
+    String str;
+
+    if (proto_value(args, 0, &str))
+    {
+      buffer->length(0);
+      buffer->append(str);
+      result= protocol->store(buffer);
     }
     break;
   }

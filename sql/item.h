@@ -1323,6 +1323,29 @@ public:
   /* purecov: end */
 
   /**
+    Get a PROTO value from an Item.
+
+    All subclasses that can return a PROTO value, should override this
+    function. The function in the base class is not expected to be
+    called. If it is called, it most likely means that some subclass
+    is missing an override of val_proto().
+
+    TODO(fanton): Make the result param an actual class, a wrapper over
+    a protobuf value.
+    @param[in,out] result The resulting String.
+
+    @return true if successful, false on failure
+  */
+  virtual bool val_proto(String *result)
+  {
+    /* purecov: begin deadcode */
+    DBUG_ABORT();
+    my_error(ER_NOT_SUPPORTED_YET, MYF(0), "item type for PROTO");
+    return error_proto();
+    /* purecov: end */
+  }
+
+  /**
     Calculate the filter contribution that is relevant for table
     'filter_for_table' for this item.
 
@@ -1366,6 +1389,18 @@ public:
     return true;
   }
 
+  /**
+    Get the value to return from val_proto() in case of errors.
+
+    @see Item::error_bool
+
+    @return The value val_proto() should return, which is false.
+  */
+  bool error_proto()
+  {
+    null_value= maybe_null;
+    return true;
+  }
 
 protected:
   /* Helper functions, see item_sum.cc */
@@ -1481,7 +1516,6 @@ protected:
     null_value= maybe_null;
     return null_value ? NULL : make_empty_result();
   }
-
 
   /**
     Convert val_str() to date in MYSQL_TIME

@@ -98,6 +98,7 @@ SET(SQL_SHARED_SOURCES
   item_geofunc_relchecks_bgwrap.cc
   item_geofunc_setops.cc
   item_json_func.cc
+  item_proto_func.cc
   item_row.cc 
   item_strfunc.cc
   item_subselect.cc
