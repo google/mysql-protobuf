@@ -460,8 +460,11 @@ bool update_field(Message *message, const FieldDescriptor *fdesc, Item *value)
     {
       String *val, buf;
       val = value->val_str(&buf);
-      std::string val_str(val->c_ptr());
-      refl->SetString(message, fdesc, val_str);
+      if (val)
+      {
+        std::string val_str(val->c_ptr());
+        refl->SetString(message, fdesc, val_str);
+      }
       break;
     }
     case FieldDescriptor::TYPE_DOUBLE:
@@ -774,4 +777,38 @@ bool Proto_manager::get_definition(String *file_path, String *field,
   DBUG_ASSERT(find_proto_definition(&data, field, output));
 
   return false;
+}
+
+// Clear the map entries with keys containing 'text'.
+void Proto_manager::clear_protobuf_map(const char *text)
+{
+  std::map<std::string, Descriptor* >::iterator it;
+
+  for (it = descriptor_map.begin(); it != descriptor_map.end();)
+  {
+    if (it->first.find(text) != std::string::npos)
+      descriptor_map.erase(it++);
+    else
+      it++;
+  }
+}
+
+// Clear the map entries with keys associated to db 'db' and table
+// 'table'.
+void Proto_manager::clear_protobuf_map(const char *db, const char *table)
+{
+  String field_path;
+  std::map<std::string, Descriptor* >::iterator it;
+
+  field_path.append(db);
+  field_path.append("/");
+  field_path.append(table);
+
+  for (it = descriptor_map.begin(); it != descriptor_map.end();)
+  {
+    if (it->first.find(field_path.c_ptr()) == 0)
+      descriptor_map.erase(it++);
+    else
+      it++;
+  }
 }

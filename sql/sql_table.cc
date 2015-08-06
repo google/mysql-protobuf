@@ -65,6 +65,8 @@
 #include "pfs_file_provider.h"
 #include "mysql/psi/mysql_file.h"
 
+#include "proto_manager.h"             // Proto_manager
+
 #include <algorithm>
 using std::max;
 using std::min;
@@ -8632,6 +8634,22 @@ simple_rename_or_index_change(THD *thd, TABLE_LIST *table_list,
   DBUG_RETURN(error != 0);
 }
 
+/**
+ * Helper function for mysql_alter_table. This function checks if there
+ * are any protobuf fields in the create_list of the alter_info.
+ */
+bool has_any_protobuf_fields(Alter_info *alter_info)
+{
+  List_iterator_fast<Create_field> it(alter_info->create_list);
+  Create_field *field;
+
+  while ((field= it++))
+  {
+    if (field->sql_type == MYSQL_TYPE_PROTOBUF)
+      return true;
+  }
+  return false;
+}
 
 /**
   Alter table
@@ -9692,6 +9710,27 @@ end_inplace:
   }
   table_list->table= NULL;			// For query cache
   query_cache.invalidate(thd, table_list, FALSE);
+
+  // Rename temporary protbuf file to the new one. Flush the
+  // Proto_manager in-memory map cache.
+  if (has_any_protobuf_fields(alter_info))
+  {
+    String tmp_path, new_path;
+
+    tmp_path.append(alter_ctx.get_tmp_path());
+    tmp_path.append(PROTO_FILE_EXTENSION);
+
+    new_path.append(alter_ctx.get_new_path());
+    new_path.append(PROTO_FILE_EXTENSION);
+
+    if (mysql_file_rename(key_file_prt, tmp_path.c_ptr(), new_path.c_ptr(),
+                          MYF(MY_WME)))
+      DBUG_RETURN(true);
+
+    Proto_manager& proto_mgr= Proto_manager::get_singleton();
+    proto_mgr.clear_protobuf_map(alter_ctx.tmp_name);
+    proto_mgr.clear_protobuf_map(alter_ctx.db, alter_ctx.table_name);
+  }
 
   if (thd->locked_tables_mode == LTM_LOCK_TABLES ||
       thd->locked_tables_mode == LTM_PRELOCKED_UNDER_LOCK_TABLES)

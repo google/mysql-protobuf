@@ -9289,10 +9289,24 @@ bool Field_proto::val_proto(Proto_wrapper *wr)
   if (proto_mgr.construct_wrapper(&file_path, &fld_name, tmp,
                                   &table->mem_root, wr))
   {
+    wr->setNull();
     DBUG_PRINT("error", ("Constructing wrapper failed."));
     DBUG_RETURN(false);
   }
+  if (is_null())
+    wr->setNull();
   DBUG_RETURN(true);
+}
+
+/**
+  Check if a new field is compatible with this one.
+  @param new_field  the new field
+  @return true if new_field is compatible with this field, false otherwise
+*/
+uint Field_proto::is_equal(Create_field *new_field)
+{
+  // All PROTOBUF fields are supposed to be compatible with each other.
+  return (new_field->sql_type == real_type());
 }
 
 /****************************************************************************
@@ -11476,6 +11490,25 @@ Create_field::Create_field(Field *old_field,Field *orig_field) :
     if (length != 4)
       length= 4; //set default value
     break;
+  case MYSQL_TYPE_PROTOBUF:
+  {
+    Proto_manager& proto_mgr = Proto_manager::get_singleton();
+    String file_path, fld_name;
+
+    file_path.append(&orig_field->table->s->db);
+    file_path.append("/");
+    file_path.append(*orig_field->table_name);
+    fld_name.append(field->field_name);
+
+    if (proto_mgr.get_definition(&file_path, &fld_name,
+                                 &orig_field->table->mem_root, &tmp))
+    {
+      DBUG_PRINT("error", ("Error getting proto definition for column %s",
+                           field->field_name));
+    }
+    protobuf_def = tmp.lex_string();
+    break;
+  }
   default:
     break;
   }

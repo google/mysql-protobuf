@@ -2936,8 +2936,7 @@ bool Item_field::val_proto(Proto_wrapper *result)
 
   if (field->is_null())
   {
-    result->setNull();
-    return true;
+    DBUG_PRINT("info", ("Field is NULL."));
   }
   return down_cast<Field_proto *>(field)->val_proto(result);
 }

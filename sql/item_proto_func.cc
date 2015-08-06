@@ -113,6 +113,8 @@ bool Item_func_protobuf_update::val_proto(Proto_wrapper *wr)
     return false;
   }
 
+  wr->unsetNull();
+
   List<String> field_path;
   for (uint32 i = 1; i< arg_count - 1; i++)
   {

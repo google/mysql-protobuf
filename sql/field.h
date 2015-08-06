@@ -3939,6 +3939,7 @@ public:
   String *val_str(String *tmp, String *str);
   longlong val_int();
   bool val_proto(Proto_wrapper *wr);
+  uint is_equal(Create_field *new_field);
 };
 
 /// A field that stores a JSON value.
@@ -4300,6 +4301,7 @@ public:
   const char *after;			// Put column after this one
   LEX_STRING comment;			// Comment for field
   LEX_STRING protobuf_def;		// Protobuf definition
+  String tmp;				// Temporary String buffer
 
   /**
      The declared default value, if any, otherwise NULL. Note that this member

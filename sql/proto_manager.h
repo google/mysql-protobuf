@@ -74,6 +74,8 @@ public:
               MEM_ROOT *mem_root, String *output);
   bool get_definition(String *file_path, String *field, MEM_ROOT *mem_root,
                       String *output);
+  void clear_protobuf_map(const char *text);
+  void clear_protobuf_map(const char *db, const char *table);
 
  protected:
   google::protobuf::Descriptor *get_descriptor(String *field_path, String *str,
@@ -120,6 +122,9 @@ class Proto_wrapper
     }
     inline void setNull() {
       is_null = true;
+    }
+    inline void unsetNull() {
+      is_null = false;
     }
     inline bool isNull() {
       return is_null;
