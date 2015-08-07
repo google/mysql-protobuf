@@ -30,6 +30,7 @@
 #include "parse_tree_helpers.h"
 #include "template_utils.h"
 #include "item_json_func.h"            // json_value, get_json_atom_wrapper
+#include "proto_manager.h"             // Proto_wrapper
 
 #include <algorithm>
 using std::min;
@@ -1149,8 +1150,17 @@ int Arg_comparator::set_cmp_func(Item_result_field *owner_arg,
     func= &Arg_comparator::compare_json;
     return 0;
   }
-
-  if (can_compare_as_dates(*a, *b, &const_value))
+  else if (((*a)->result_type() == STRING_RESULT &&
+            (*a)->field_type() == MYSQL_TYPE_PROTOBUF) ||
+           ((*b)->result_type() == STRING_RESULT &&
+            (*b)->field_type() == MYSQL_TYPE_PROTOBUF))
+  {
+    // Use the PROTOBUF comparator if at least one of the args is PROTOBUF.
+    is_nulls_eq= is_owner_equal_func();
+    func= &Arg_comparator::compare_protobuf;
+    return 0;
+  }
+  else if (can_compare_as_dates(*a, *b, &const_value))
   {
     a_cache= 0;
     b_cache= 0;
@@ -1578,6 +1588,68 @@ static bool get_json_arg(Item* arg, String *value, String *tmp,
   return get_json_atom_wrapper(&arg, 0, "<=", value, tmp, result, holder, true);
 }
 
+/**
+  Compare two Item objects as PROTOBUFs.
+*/
+int Arg_comparator::compare_protobuf()
+{
+  DBUG_ASSERT((*a)->field_type() == MYSQL_TYPE_PROTOBUF ||
+              (*b)->field_type() == MYSQL_TYPE_PROTOBUF);
+
+  Proto_wrapper a_wr, b_wr;
+  if ((*a)->field_type() == MYSQL_TYPE_NULL ||
+      (*b)->field_type() == MYSQL_TYPE_NULL)
+  {
+    owner->null_value= true;
+    return -1;
+  }
+
+  if ((*a)->field_type() == MYSQL_TYPE_PROTOBUF &&
+      (*b)->field_type() == MYSQL_TYPE_PROTOBUF)
+  {
+    if ((*a)->val_proto(&a_wr)  == false || (*b)->val_proto(&b_wr) == false
+        || a_wr.isNull() || b_wr.isNull())
+    {
+      if (!is_nulls_eq)
+      {
+        if (set_null)
+          owner->null_value= true;
+        return -1;
+      }
+    }
+
+    if (set_null)
+      owner->null_value= false;
+    return a_wr.compare(&b_wr);
+  }
+
+  // If b is protobuf, than just exchange pointers with a, to avoid
+  // duplicate code.
+  if ((*b)->field_type() == MYSQL_TYPE_PROTOBUF)
+  {
+    Item **tmp;
+    tmp= a;
+    a= b;
+    b= tmp;
+  }
+
+  if ((*a)->val_proto(&a_wr) == false || a_wr.isNull())
+  {
+    if (!is_nulls_eq)
+    {
+      if (set_null)
+        owner->null_value= true;
+      return -1;
+    }
+  }
+
+  if (set_null)
+    owner->null_value= false;
+
+  String *val, buf;
+  val= (*b)->val_str(&buf);
+  return a_wr.compare(val);
+}
 
 /**
   Compare two Item objects as JSON.

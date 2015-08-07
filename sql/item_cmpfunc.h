@@ -113,6 +113,7 @@ public:
   int compare_e_real_fixed();
   int compare_datetime();        // compare args[0] & args[1] as DATETIMEs
   int compare_json();
+  int compare_protobuf();
 
   static bool can_compare_as_dates(Item *a, Item *b, ulonglong *const_val_arg);
 

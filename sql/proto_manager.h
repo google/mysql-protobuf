@@ -63,6 +63,11 @@ public:
                                                MEM_ROOT *mem_root);
   bool construct_wrapper(String *file_path, String *field, String *message,
                          MEM_ROOT *mem_root, Proto_wrapper *wr);
+  bool construct_wrapper_message(const google::protobuf::Descriptor *desc,
+                                 String *text, Proto_wrapper *wr);
+  bool construct_wrapper_value(const google::protobuf::Descriptor *desc,
+                               String *text, Proto_wrapper *wr,
+                               String *field);
   bool encode(String *field_path, String *field, String *message,
               MEM_ROOT *mem_root, String *output);
   bool decode(String *file_path, String *field, String *message,
@@ -126,6 +131,8 @@ class Proto_wrapper
       is_leaf = true;
     }
 
+    String *getLeafName(String *buf);
+
     bool extract(String *field);
     bool update(List<String> *field_path, Item *value);
     bool to_text(String *val_ptr);
@@ -135,6 +142,8 @@ class Proto_wrapper
     {
       return (longlong)floor(val_real());
     }
+    int compare(Proto_wrapper *other);
+    int compare(String *other);
 };
 
 #endif /* PROTO_MANAGER_INCLUDED */

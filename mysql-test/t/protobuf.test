@@ -60,7 +60,7 @@ INSERT INTO t1 VALUES(3, 'id: 3
 INSERT INTO t1 VALUES(4, 'id: 4
                           name: "Emma"
                           info {
-                            phone { number: "444" other: "650-444" }
+                            phone { number: "444" other: "94043" }
                             address { number: 1901 zipcode: 94043 street: "Rock St"}
                          }
                          ');
@@ -121,6 +121,14 @@ SELECT * from t1 where p[info.address.number] = 1901;
 SELECT * from t1 where p[id] = p[id];
 SELECT * from t1 where p[info] = p[info];
 SELECT * from t1 where p[id] = p[info.phone.other];
+
+# more comparison checks
+SELECT * from t1 where p[name] < "Dean";
+SELECT * from t1 where p[info.phone.other] = p[info.address.zipcode];
+SELECT * from t1 where p[info] = "phone { } address {}";
+SELECT * from t1 where "   address {     }phone {        }" = p[info];
+SELECT * from t1 where p[info.phone] = " other:   '94043'    number:'444' ";
+SELECT * from t1 where " other:   '94043'    number:'444' " = p[info.phone];
 
 # invalid field checks
 --error ER_INVALID_PROTO_FIELD

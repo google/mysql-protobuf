@@ -305,6 +305,69 @@ bool Proto_manager::construct_wrapper(String *file_path, String *field,
   return false;
 }
 
+bool Proto_manager::construct_wrapper_message(const Descriptor *desc,
+                                              String *text, Proto_wrapper *wr)
+{
+  const Message *proto_msg= factory.GetPrototype(desc);
+  DBUG_ASSERT(proto_msg);
+  Message *mutable_msg = proto_msg->New();
+  DBUG_ASSERT(mutable_msg);
+
+  std::stringstream ss(std::string(text->c_ptr(),
+                                   text->c_ptr() + text->length()));
+
+  io::IstreamInputStream iis(&ss, -1);
+  if (TextFormat::Parse(&iis, mutable_msg) == false)
+  {
+    DBUG_PRINT("error", ("Text parse error."));
+    return true;
+  }
+
+  wr->setMessage(mutable_msg);
+  return false;
+}
+
+bool Proto_manager::construct_wrapper_value(const Descriptor *desc, String *text,
+                                            Proto_wrapper *wr,
+                                            String *field)
+{
+  const Message *proto_msg= factory.GetPrototype(desc);
+  DBUG_ASSERT(proto_msg);
+  Message *mutable_msg = proto_msg->New();
+  DBUG_ASSERT(mutable_msg);
+
+  std::string field_name(field->c_ptr());
+  const FieldDescriptor *fdesc = desc->FindFieldByName(field_name);
+
+  if (!fdesc)
+    return -1;
+
+  std::string str(std::string(text->c_ptr(),
+                                   text->c_ptr() + text->length()));
+
+  /**
+   * This is a workaround to allow the user to avoid quoting every
+   * string. Unfortunately, we still have to quote it manually here,
+   * if the user hasn't, otherwise the protobuf parser won't recognize
+   * it.
+   */
+  if (fdesc->type() == FieldDescriptor::TYPE_STRING && str[0] != '"')
+  {
+      str.insert(0, "\"");
+      str.append("\"");
+  }
+
+  if (TextFormat::ParseFieldValueFromString(str, fdesc,
+                                            mutable_msg) == false)
+  {
+    DBUG_PRINT("error", ("Text parse error."));
+    return true;
+  }
+
+  wr->setMessage(mutable_msg);
+  return false;
+}
+
 bool Proto_wrapper::extract(String *field)
 {
   // Check if the field is defined in the proto definition.
@@ -626,6 +689,78 @@ bool Proto_wrapper::to_text_only_vals(String *val_ptr)
   return true;
 }
 
+// Compare two protobuf wrappers. This function considers two
+// Proto_wrappers to be equal iff their messages binary form is exactly
+// the same. There's one exception though, if one of the wrappers comes
+// from an extract (isLeaf() returns true) it means that probably the
+// user just wants to compare the values so we only compare the values.
+int Proto_wrapper::compare(Proto_wrapper *other)
+{
+  std::stringstream oss1, oss2;
+
+  if (isLeaf() || other->isLeaf())
+  {
+    String s1, s2;
+    to_text_only_vals(&s1);
+    other->to_text_only_vals(&s2);
+
+    oss1.write(s1.c_ptr(), s1.length());
+    oss2.write(s2.c_ptr(), s2.length());
+  }
+  else
+  {
+    message->SerializeToOstream(&oss1);
+    other->get_message()->SerializeToOstream(&oss2);
+  }
+
+  return oss1.str().compare(oss2.str());
+}
+
+// Compare a protobuf wrapper to a string. This function takes the
+// string, converts it to a Proto_wrapper using the descriptor of the
+// current Proto_wrapper and than calls the compare function for two
+// Proto_wrappers.
+int Proto_wrapper::compare(String *other)
+{
+  Proto_wrapper other_wr;
+  Proto_manager& proto_mgr = Proto_manager::get_singleton();
+  const Descriptor* desc = message->GetDescriptor();
+
+  if (!isLeaf())
+  {
+    if (proto_mgr.construct_wrapper_message(desc, other, &other_wr))
+      return -1;
+  }
+  else
+  {
+    String *val, buf;
+    val = getLeafName(&buf);
+    if (proto_mgr.construct_wrapper_value(desc, other, &other_wr, val))
+      return -1;
+  }
+
+  return compare(&other_wr);
+}
+
+// Return the name of this Proto_wrapper's single field. If it's not a
+// leaf (not a single field) then return the name of the first field.
+String *Proto_wrapper::getLeafName(String *buf)
+{
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+  std::vector<const FieldDescriptor *> fdescs;
+
+  refl->ListFields(*message, &fdescs);
+
+  if (fdescs.size() == 0)
+    return NULL;
+
+  buf->length(0);
+  buf->append(fdescs[0]->name().c_str(), fdescs[0]->name().length());
+
+  return buf;
+}
+
 // Write the proto definition to "output".
 bool Proto_manager::get_definition(String *file_path, String *field,
                                    MEM_ROOT *mem_root, String *output)
@@ -640,4 +775,3 @@ bool Proto_manager::get_definition(String *file_path, String *field,
 
   return false;
 }
-

@@ -79,7 +79,7 @@ INSERT INTO t1 VALUES(3, 'id: 3
 INSERT INTO t1 VALUES(4, 'id: 4
                           name: "Emma"
                           info {
-                            phone { number: "444" other: "650-444" }
+                            phone { number: "444" other: "94043" }
                             address { number: 1901 zipcode: 94043 street: "Rock St"}
                          }
                          ');
@@ -104,7 +104,7 @@ i	p
 1	name: "Bob" 
 2	id: 2 name: "Charlie" info {   phone {     number: "123"     other: "321"   } } 
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 6	info { } 
 7	
@@ -137,7 +137,7 @@ NULL
 NULL
 phone {   number: "123"   other: "321" } 
 phone {   number: "123"   other: "3" } address {   number: 1901   zipcode: 94043 } 
-phone {   number: "444"   other: "650-444" } address {   number: 1901   street: "Rock St"   zipcode: 94043 } 
+phone {   number: "444"   other: "94043" } address {   number: 1901   street: "Rock St"   zipcode: 94043 } 
 phone { } address { } 
 
 NULL
@@ -148,7 +148,7 @@ NULL
 NULL
 number: "123" other: "321" 
 number: "123" other: "3" 
-number: "444" other: "650-444" 
+number: "444" other: "94043" 
 
 NULL
 NULL
@@ -181,7 +181,7 @@ NULL
 NULL
 321
 3
-650-444
+94043
 NULL
 NULL
 NULL
@@ -237,7 +237,7 @@ i	p
 SELECT * from t1 where p[info.address.zipcode] is not NULL;
 i	p
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 SELECT * from t1 where p = NULL;
 i	p
 SELECT * from t1 where p[info] = NULL;
@@ -247,7 +247,7 @@ i	p
 0	id: 0 name: "Alice" 
 SELECT * from t1 where p[name] > "Dean";
 i	p
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 SELECT * from t1 where p[id] = "5";
 i	p
@@ -255,31 +255,51 @@ i	p
 SELECT * from t1 where p[info.address.number] = "1901";
 i	p
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 SELECT * from t1 where p[id] = 5;
 i	p
 5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 SELECT * from t1 where p[info.address.number] = 1901;
 i	p
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 SELECT * from t1 where p[id] = p[id];
 i	p
 0	id: 0 name: "Alice" 
 2	id: 2 name: "Charlie" info {   phone {     number: "123"     other: "321"   } } 
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 SELECT * from t1 where p[info] = p[info];
 i	p
 2	id: 2 name: "Charlie" info {   phone {     number: "123"     other: "321"   } } 
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 6	info { } 
 SELECT * from t1 where p[id] = p[info.phone.other];
 i	p
 3	id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
+SELECT * from t1 where p[name] < "Dean";
+i	p
+0	id: 0 name: "Alice" 
+1	name: "Bob" 
+2	id: 2 name: "Charlie" info {   phone {     number: "123"     other: "321"   } } 
+SELECT * from t1 where p[info.phone.other] = p[info.address.zipcode];
+i	p
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+SELECT * from t1 where p[info] = "phone { } address {}";
+i	p
+5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
+SELECT * from t1 where "   address {     }phone {        }" = p[info];
+i	p
+5	id: 5 name: "Incognito" info {   phone {   }   address {   } } 
+SELECT * from t1 where p[info.phone] = " other:   '94043'    number:'444' ";
+i	p
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+SELECT * from t1 where " other:   '94043'    number:'444' " = p[info.phone];
+i	p
+4	id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 SELECT p[random_text] from t1;
 ERROR 22032: Invalid PROTO field: Field 'random_text' not found in the PROTO definition for column 'test.t1.p'.
 SELECT p[`where`] from t1;
@@ -334,7 +354,7 @@ id: 0 name: "Alice"
 name: "Bob" 
 id: 2 name: "Charlie" info {   phone {     number: "123"     other: "321"   } } 
 id: 3 name: "Dean" info {   phone {     number: "123"     other: "3"   }   address {     number: 1901     zipcode: 94043   } } 
-id: 4 name: "Emma" info {   phone {     number: "444"     other: "650-444"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
+id: 4 name: "Emma" info {   phone {     number: "444"     other: "94043"   }   address {     number: 1901     street: "Rock St"     zipcode: 94043   } } 
 id: 5 name: "Incognito" info {   phone {   }   address {   } } 
 info { } 
 
