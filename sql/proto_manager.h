@@ -87,6 +87,7 @@ class Proto_wrapper
 
     bool absorb_message(const google::protobuf::Reflection *refl,
                         const google::protobuf::FieldDescriptor *fdesc);
+    uint32 number_of_fields();
 
   public:
     Proto_wrapper(): message(NULL) {}
@@ -113,6 +114,12 @@ class Proto_wrapper
 
     bool extract(String *field);
     bool to_text(String *val_ptr);
+    bool to_text_only_vals(String *val_ptr);
+    double val_real();
+    inline longlong val_int()
+    {
+      return (longlong)floor(val_real());
+    }
 };
 
 #endif /* PROTO_MANAGER_INCLUDED */

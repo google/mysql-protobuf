@@ -235,13 +235,21 @@ bool Proto_wrapper::to_text(String *val_ptr)
   std::string out_str;
   io::StringOutputStream sos(&out_str);
   DBUG_ASSERT(message || is_null);
+  bool ret = true;
 
   val_ptr->length(0);
   if (!is_null)
   {
-    TextFormat::Print(*message, &sos);
-    std::replace(out_str.begin(), out_str.end(), '\n', ' ');
-    val_ptr->append(out_str.c_str(), out_str.length());
+    if (number_of_fields() > 1)
+    {
+      TextFormat::Print(*message, &sos);
+      std::replace(out_str.begin(), out_str.end(), '\n', ' ');
+      val_ptr->append(out_str.c_str(), out_str.length());
+    }
+    else
+    {
+      ret = to_text_only_vals(val_ptr);
+    }
   }
   else
   {
@@ -252,7 +260,7 @@ bool Proto_wrapper::to_text(String *val_ptr)
     val_ptr->append("NULL");
   }
 
-  return true;
+  return ret;
 }
 
 bool Proto_wrapper::absorb_message(const Reflection *refl, const FieldDescriptor *fdesc)
@@ -261,3 +269,80 @@ bool Proto_wrapper::absorb_message(const Reflection *refl, const FieldDescriptor
   message = (Message *)&msg;
   return true;
 }
+
+uint32 Proto_wrapper::number_of_fields()
+{
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+  std::vector<const FieldDescriptor *> fdescs;
+
+  refl->ListFields(*message, &fdescs);
+  return fdescs.size();
+}
+
+double Proto_wrapper::val_real()
+{
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+  std::vector<const FieldDescriptor *> fdescs;
+
+  refl->ListFields(*message, &fdescs);
+
+  if (fdescs.size() > 1)
+    return 0.0;
+
+  switch (fdescs[0]->type())
+  {
+    case FieldDescriptor::TYPE_DOUBLE:
+      return refl->GetDouble(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_FLOAT:
+      return (double)refl->GetFloat(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_INT32:
+      return (double)refl->GetInt32(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_INT64:
+      return (double)refl->GetInt64(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_UINT32:
+      return (double)refl->GetUInt32(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_UINT64:
+      return (double)refl->GetUInt64(*message, fdescs[0]);
+    case FieldDescriptor::TYPE_STRING:
+    {
+      char *end_not_used;
+      int not_used;
+
+      string str = refl->GetString(*message, fdescs[0]);
+      return my_strntod(&my_charset_utf8_bin, &str[0], str.size(), &end_not_used, &not_used);
+    }
+    default:
+      return 0.0;
+  }
+  return 0.0;
+}
+
+// This method CAN be called for multiple fields, but is best called on
+// a wrapper for a proto with only one field, otherwise may create
+// confusion. Its output is also not compliant with the protobuf text
+// syntax.
+bool Proto_wrapper::to_text_only_vals(String *val_ptr)
+{
+  const Reflection *refl = message->GetReflection();
+  DBUG_ASSERT(refl);
+  std::vector<const FieldDescriptor *> fdescs;
+
+  refl->ListFields(*message, &fdescs);
+  val_ptr->length(0);
+  for (uint32 i= 0; i< fdescs.size(); ++i)
+  {
+    const FieldDescriptor *fdesc = fdescs[i];
+    std::string out_str;
+    TextFormat::PrintFieldValueToString(*message, fdesc, -1, &out_str);
+    val_ptr->append(out_str.c_str());
+    val_ptr->append(" ");
+  }
+
+  // If we did at least one iteration, delete the trailing whitespace.
+  if (val_ptr->length() > 0)
+    val_ptr->chop();
+  return true;
+}
+

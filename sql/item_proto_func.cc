@@ -55,14 +55,48 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
 
 double Item_proto_func::val_real()
 {
-        DBUG_ENTER("Item_proto_func::val_real");
-        DBUG_RETURN(0.0);
+  Proto_wrapper wr;
+
+  DBUG_ENTER("Item_proto_func::val_real");
+  if (field_type() != MYSQL_TYPE_PROTOBUF)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), full_name());
+    DBUG_RETURN(0.0);
+  }
+
+  if (val_proto(&wr) == false)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), full_name());
+    DBUG_RETURN(0.0);
+  }
+
+  if (wr.isNull())
+    DBUG_RETURN(0.0);
+
+  DBUG_RETURN(wr.val_real());
 }
 
 longlong Item_proto_func::val_int()
 {
-        DBUG_ENTER("Item_proto_func::val_int");
-        DBUG_RETURN(0);
+  Proto_wrapper wr;
+
+  DBUG_ENTER("Item_proto_func::val_int");
+  if (field_type() != MYSQL_TYPE_PROTOBUF)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), full_name());
+    DBUG_RETURN(0);
+  }
+
+  if (val_proto(&wr) == false)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), full_name());
+    DBUG_RETURN(0);
+  }
+
+  if (wr.isNull())
+    DBUG_RETURN(0);
+
+  DBUG_RETURN(wr.val_int());
 }
 
 String *Item_proto_func::val_str(String *str)
