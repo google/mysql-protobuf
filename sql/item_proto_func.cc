@@ -2,27 +2,38 @@
 
 #include "item_proto_func.h"
 #include "sql_class.h"
+#include "proto_manager.h"      // Proto_wrapper
 
-bool Item_func_protobuf_extract::val_proto(String *result)
+bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
 {
 
-  if (args[0]->null_value) {
-          null_value= true;
-          return true;
+  if (args[0]->null_value || args[1]->null_value)
+  {
+    null_value= true;
+    return true;
   }
 
-  String out;
+  String *field, val;
+  field= args[1]->val_str(&val);
 
-  /**
-   * TODO(fanton): The val_str call below will eventually result to a
-   * Field_blob::val_str(&out) call. In the future we'll have to insert a
-   * ProtoWrapper class in between in order to have more control over
-   * the actual protobuf value, being it binary or text.
-   */
-  args[0]->val_str(&out);
-  result->length(0);
-  result->append("I will extract from: ");
-  result->append(out);
+  if (args[0]->field_type() != MYSQL_TYPE_PROTOBUF)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), args[0]->full_name());
+    return false;
+  }
+
+  if (args[0]->val_proto(wr) == false)
+  {
+    DBUG_PRINT("error", ("Error with val_proto."));
+    return false;
+  }
+
+  if (wr->extract(field) == false)
+  {
+    my_error(ER_INVALID_PROTO_FIELD, MYF(0), field->c_ptr(),
+             args[0]->full_name());
+    return false;
+  }
   return true;
 }
 
@@ -85,8 +96,11 @@ bool proto_value(Item **args, uint arg_idx, String *result)
   }
   else
   {
-    ok= arg->val_proto(result);
+    Proto_wrapper wr;
+    ok= arg->val_proto(&wr);
+    if (!ok)
+      return false;
+    ok= wr.to_text(result);
   }
-
   return ok;
 }

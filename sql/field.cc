@@ -27,7 +27,7 @@
 
 #include "filesort.h"                    // change_double_for_sort
 #include "item_timefunc.h"               // Item_func_now_local
-#include "proto_manager.h"               // Proto_manager
+#include "proto_manager.h"               // Proto_manager, Proto_wrapper
 #include "json_binary.h"                 // json_binary::serialize
 #include "json_dom.h"                    // Json_dom, Json_wrapper
 #include "item_json_func.h"              // ensure_utf8mb4
@@ -9245,6 +9245,37 @@ String *Field_proto::val_str(String *tmp, String *val_ptr)
   DBUG_RETURN(val_ptr);
 }
 
+longlong Field_proto::val_int()
+{
+  my_error(ER_INVALID_PROTO_VALUE_FOR_CAST, MYF(0), "INTEGER",
+           field_name);
+  return 0;
+}
+
+bool Field_proto::val_proto(Proto_wrapper *wr)
+{
+  String proto_def, buf, *tmp;
+  DBUG_ENTER("Field_proto::val_proto");
+  Proto_manager& proto_mgr= Proto_manager::get_singleton();
+
+  ASSERT_COLUMN_MARKED_FOR_READ;
+
+  proto_def.length(0);
+  proto_def.append(comment.str, comment.length);
+
+  String field_path;
+  field_path.append(*table_name);
+  field_path.append('.');
+  field_path.append(field_name);
+
+  tmp= Field_blob::val_str(&buf, &buf);
+  if (proto_mgr.construct_wrapper(&field_path, tmp, &proto_def, wr))
+  {
+    DBUG_PRINT("error", ("Constructing wrapper failed."));
+    DBUG_RETURN(false);
+  }
+  DBUG_RETURN(true);
+}
 
 /****************************************************************************
 ** enum type.

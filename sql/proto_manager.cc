@@ -157,24 +157,14 @@ bool Proto_manager::encode(String *field_path, String *message,
 bool Proto_manager::decode(String *field_path, String *message,
                            String *proto_def, String *output)
 {
-  Message *mutable_msg= construct_message(field_path, proto_def);
-
-  DBUG_ASSERT(mutable_msg);
-
-  std::stringstream ss(std::string(message->c_ptr(),
-                                   message->c_ptr() + message->length()));
-  if (mutable_msg->ParseFromIstream(&ss) == false)
+  Proto_wrapper wr;
+  if (construct_wrapper(field_path, message, proto_def, &wr))
   {
-    DBUG_PRINT("error", ("Binary message parsing error."));
+    DBUG_PRINT("error", ("Error constructing wrapper."));
     return true;
   }
 
-  std::string out_str;
-  io::StringOutputStream sos(&out_str);
-  TextFormat::Print(*mutable_msg, &sos);
-  output->length(0);
-  output->append(out_str.c_str(), out_str.length());
-
+  wr.to_text(output);
   return false;
 }
 
@@ -191,4 +181,59 @@ Message *Proto_manager::construct_message(String *field_path, String *proto_def)
   const Message *proto_msg= factory.GetPrototype(proto_descr);
   DBUG_ASSERT(proto_msg);
   return proto_msg->New();
+}
+
+bool Proto_manager::construct_wrapper(String *field_path, String *message,
+                                      String *proto_def, Proto_wrapper *wr)
+{
+  Message *mutable_msg= construct_message(field_path, proto_def);
+
+  DBUG_ASSERT(mutable_msg);
+
+  std::stringstream ss(std::string(message->c_ptr(),
+                                   message->c_ptr() + message->length()));
+  if (mutable_msg->ParseFromIstream(&ss) == false)
+  {
+    DBUG_PRINT("error", ("Binary message parsing error."));
+    return true;
+  }
+
+  wr->setMessage(mutable_msg);
+  return false;
+}
+
+bool Proto_wrapper::extract(String *field)
+{
+  const Reflection *refl= message->GetReflection();
+  DBUG_ASSERT(refl);
+  std::vector<const FieldDescriptor *> fdescs;
+  bool found_field= false;
+
+  refl->ListFields(*message, &fdescs);
+  for (uint32 i= 0; i < fdescs.size(); ++i)
+  {
+    const FieldDescriptor *fdesc= fdescs[i];
+    std::string field_name(field->c_ptr());
+
+    if (!(fdesc->name().compare(field_name) == 0))
+      refl->ClearField(message, fdesc);
+    else
+      found_field= true;
+  }
+
+  if (!found_field)
+    return false;
+  return true;
+}
+
+bool Proto_wrapper::to_text(String *val_ptr)
+{
+  std::string out_str;
+  io::StringOutputStream sos(&out_str);
+  TextFormat::Print(*message, &sos);
+  val_ptr->length(0);
+  std::replace(out_str.begin(), out_str.end(), '\n', ' ');
+  val_ptr->append(out_str.c_str(), out_str.length());
+
+  return true;
 }

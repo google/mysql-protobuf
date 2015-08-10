@@ -1330,13 +1330,11 @@ public:
     called. If it is called, it most likely means that some subclass
     is missing an override of val_proto().
 
-    TODO(fanton): Make the result param an actual class, a wrapper over
-    a protobuf value.
-    @param[in,out] result The resulting String.
+    @param[in,out] result The resulting Proto_wrapper.
 
     @return true if successful, false on failure
   */
-  virtual bool val_proto(String *result)
+  virtual bool val_proto(Proto_wrapper *result)
   {
     /* purecov: begin deadcode */
     DBUG_ABORT();
@@ -2832,6 +2830,7 @@ public:
   longlong val_date_temporal();
   my_decimal *val_decimal(my_decimal *);
   String *val_str(String*);
+  bool val_proto(Proto_wrapper *result);
   bool val_json(Json_wrapper *result);
   double val_result();
   longlong val_int_result();

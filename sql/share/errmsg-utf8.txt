@@ -7609,6 +7609,15 @@ ER_INVALID_PROTO_TEXT 22032
 ER_INVALID_PROTO_DEFINITION 22032
   eng "Invalid PROTO definition: '%s' for column '%-.200s'."
 
+ER_INVALID_PROTO_COLUMN 22032
+  eng "Invalid PROTO column. Not a PROTO column: '%-.200s'."
+
+ER_INVALID_PROTO_FIELD 22032
+  eng "Invalid PROTO field: Field '%s' not found in the PROTO definition for column '%-.200s'."
+
+ER_INVALID_PROTO_VALUE_FOR_CAST 22018
+  eng "Invalid PROTOBUF value for CAST to %s: Cannot CAST PROTOBUF from column %s."
+
 #
 #  End of 5.7 error messages.
 #

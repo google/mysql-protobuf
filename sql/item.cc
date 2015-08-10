@@ -28,6 +28,7 @@
 #include "item_proto_func.h" // proto_value
 #include "item_strfunc.h"    // Item_func_conv_charset
 #include "item_sum.h"        // Item_sum
+#include "proto_manager.h"   // Proto_wrapper
 #include "json_dom.h"        // Json_wrapper
 #include "log_event.h"       // append_query_string
 #include "sp.h"              // sp_map_item_type
@@ -2928,6 +2929,15 @@ bool Item_field::val_json(Json_wrapper *result)
   return down_cast<Field_json *>(field)->val_json(result);
 }
 
+bool Item_field::val_proto(Proto_wrapper *result)
+{
+  DBUG_ASSERT(fixed);
+  DBUG_ASSERT(field_type() == MYSQL_TYPE_PROTOBUF);
+  null_value= field->is_null();
+  if (null_value)
+    return true;
+  return down_cast<Field_proto *>(field)->val_proto(result);
+}
 
 double Item_field::val_real()
 {

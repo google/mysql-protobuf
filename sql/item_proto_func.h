@@ -6,6 +6,8 @@
 
 /* PROTOBUF function support  */
 
+class Proto_wrapper;
+
 /**
   Base class for all item functions that return a PROTOBUF value.
 */
@@ -53,7 +55,7 @@ public:
     return "proto_extract";
   }
 
-  bool val_proto(String *result);
+  bool val_proto(Proto_wrapper *wr);
 };
 
 bool proto_value(Item **args, uint arg_idx, String *result);

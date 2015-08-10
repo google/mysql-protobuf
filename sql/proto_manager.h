@@ -10,6 +10,8 @@
 
 #define MAX_MESSAGE_NAME_LENGTH     1024
 
+class Proto_wrapper;
+
 class Proto_manager
 {
 private:
@@ -56,6 +58,8 @@ public:
   bool proto_is_valid(String *str);
   google::protobuf::Message *construct_message(String *field_path,
                                                String *proto_def);
+  bool construct_wrapper(String *field_path, String *message,
+                         String *proto_def, Proto_wrapper *wr);
   bool encode(String *field_path, String *message, String *proto_def,
               String *output);
   bool decode(String *field_path, String *message, String *proto_def,
@@ -74,4 +78,31 @@ private:
   Proto_manager& operator=(Proto_manager const& copy);
 
 };
+
+class Proto_wrapper
+{
+  private:
+    google::protobuf::Message *message;
+
+  public:
+    Proto_wrapper(): message(NULL) {}
+
+    ~Proto_wrapper() {
+      if (message != NULL)
+        delete message;
+    }
+
+    inline google::protobuf::Message *get_message() {
+      return message;
+    }
+
+    inline void setMessage(google::protobuf::Message *msg) {
+      DBUG_ASSERT(msg);
+      message= msg;
+    }
+
+    bool extract(String *field);
+    bool to_text(String *val_ptr);
+};
+
 #endif /* PROTO_MANAGER_INCLUDED */

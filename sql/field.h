@@ -33,6 +33,7 @@
 class Create_field;
 class Json_dom;
 class Json_wrapper;
+class Proto_wrapper;
 class Protocol;
 class Relay_log_info;
 class Send_field;
@@ -3931,6 +3932,8 @@ public:
   Field_proto *clone() const;
   Item_result cast_to_int_type () const { return INT_RESULT; }
   String *val_str(String *tmp, String *str);
+  longlong val_int();
+  bool val_proto(Proto_wrapper *wr);
 };
 
 /// A field that stores a JSON value.
