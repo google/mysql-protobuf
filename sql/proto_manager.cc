@@ -218,7 +218,11 @@ bool Proto_wrapper::extract(String *field)
     if (!(fdesc->name().compare(field_name) == 0))
       refl->ClearField(message, fdesc);
     else
+    {
       found_field= true;
+      if (fdesc->type() == FieldDescriptor::TYPE_MESSAGE)
+        return absorb_message(refl, fdesc);
+    }
   }
 
   if (!found_field)
@@ -230,10 +234,30 @@ bool Proto_wrapper::to_text(String *val_ptr)
 {
   std::string out_str;
   io::StringOutputStream sos(&out_str);
-  TextFormat::Print(*message, &sos);
-  val_ptr->length(0);
-  std::replace(out_str.begin(), out_str.end(), '\n', ' ');
-  val_ptr->append(out_str.c_str(), out_str.length());
+  DBUG_ASSERT(message || is_null);
 
+  val_ptr->length(0);
+  if (!is_null)
+  {
+    TextFormat::Print(*message, &sos);
+    std::replace(out_str.begin(), out_str.end(), '\n', ' ');
+    val_ptr->append(out_str.c_str(), out_str.length());
+  }
+  else
+  {
+    // TODO(fanton): will fix this in a future commit. We should find a
+    // way to propagate this upwards as a NULL value (probably by
+    // changing the function parameter to be a Proto_wrapper and do the
+    // checks in the caller.
+    val_ptr->append("NULL");
+  }
+
+  return true;
+}
+
+bool Proto_wrapper::absorb_message(const Reflection *refl, const FieldDescriptor *fdesc)
+{
+  const Message& msg = refl->GetMessage(*message, fdesc);
+  message = (Message *)&msg;
   return true;
 }

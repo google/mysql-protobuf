@@ -83,6 +83,10 @@ class Proto_wrapper
 {
   private:
     google::protobuf::Message *message;
+    bool is_null;
+
+    bool absorb_message(const google::protobuf::Reflection *refl,
+                        const google::protobuf::FieldDescriptor *fdesc);
 
   public:
     Proto_wrapper(): message(NULL) {}
@@ -99,6 +103,12 @@ class Proto_wrapper
     inline void setMessage(google::protobuf::Message *msg) {
       DBUG_ASSERT(msg);
       message= msg;
+    }
+    inline void setNull() {
+      is_null = true;
+    }
+    inline bool isNull() {
+      return is_null;
     }
 
     bool extract(String *field);

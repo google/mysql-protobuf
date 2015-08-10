@@ -10,11 +10,9 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
   if (args[0]->null_value || args[1]->null_value)
   {
     null_value= true;
+    wr->setNull();
     return true;
   }
-
-  String *field, val;
-  field= args[1]->val_str(&val);
 
   if (args[0]->field_type() != MYSQL_TYPE_PROTOBUF)
   {
@@ -24,16 +22,34 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
 
   if (args[0]->val_proto(wr) == false)
   {
-    DBUG_PRINT("error", ("Error with val_proto."));
+    DBUG_PRINT("error", ("Error converting to val_proto: %s",
+                args[0]->full_name()));
     return false;
   }
 
-  if (wr->extract(field) == false)
+  String *proto_path, val, dot;
+  int offset = 0, dot_start;
+
+  dot.append(".");
+  proto_path= args[1]->val_str(&val);
+  proto_path->append(".");
+  dot_start = proto_path->strstr(dot, offset);
+
+  while (dot_start > 0)
   {
-    my_error(ER_INVALID_PROTO_FIELD, MYF(0), field->c_ptr(),
-             args[0]->full_name());
-    return false;
+    String proto_field = proto_path->substr(offset, dot_start - offset);
+
+    if (wr->extract(&proto_field) == false)
+    {
+      my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field.c_ptr(),
+               args[0]->full_name());
+      proto_path->chop();
+      return false;
+    }
+    offset = dot_start + 1;
+    dot_start = proto_path->strstr(dot, offset);
   }
+  proto_path->chop();
   return true;
 }
 
@@ -51,8 +67,20 @@ longlong Item_proto_func::val_int()
 
 String *Item_proto_func::val_str(String *str)
 {
-        DBUG_ENTER("Item_proto_func::val_str");
-        DBUG_RETURN(str);
+  DBUG_ENTER("Item_proto_func::val_str");
+  Proto_wrapper wr;
+
+  if (field_type() != MYSQL_TYPE_PROTOBUF)
+  {
+    my_error(ER_INVALID_PROTO_COLUMN, MYF(0), full_name());
+    return str;
+  }
+
+  if (val_proto(&wr) == false)
+    DBUG_RETURN(str);
+
+  wr.to_text(str);
+  DBUG_RETURN(str);
 }
 
 bool Item_proto_func::get_date(MYSQL_TIME *ltime, my_time_flags_t fuzzydate)
