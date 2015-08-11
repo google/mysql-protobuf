@@ -90,13 +90,15 @@ class Proto_wrapper
   private:
     google::protobuf::Message *message;
     bool is_null;
+    bool is_leaf;
 
     bool absorb_message(const google::protobuf::Reflection *refl,
                         const google::protobuf::FieldDescriptor *fdesc);
-    uint32 number_of_fields();
 
   public:
-    Proto_wrapper(): message(NULL) {}
+    Proto_wrapper()
+    : message(NULL), is_null(false), is_leaf(false)
+    {}
 
     ~Proto_wrapper() {
       if (message != NULL)
@@ -116,6 +118,12 @@ class Proto_wrapper
     }
     inline bool isNull() {
       return is_null;
+    }
+    inline bool isLeaf() {
+      return is_leaf;
+    }
+    inline void setLeaf() {
+      is_leaf = true;
     }
 
     bool extract(String *field);

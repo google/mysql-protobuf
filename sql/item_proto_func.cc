@@ -27,6 +27,9 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
     return false;
   }
 
+  if (wr->isNull())
+    return true;
+
   if (arg_count == 2)
   {
     String *proto_path, val, dot;
@@ -37,17 +40,24 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
     proto_path->append(".");
     dot_start= proto_path->strstr(dot, offset);
 
-    while (dot_start > 0)
+    while (dot_start > 0 && (uint32)dot_start < proto_path->length())
     {
       String proto_field= proto_path->substr(offset, dot_start - offset);
 
-      if (wr->extract(&proto_field) == false)
+      if (wr->extract(&proto_field))
       {
         my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field.c_ptr(),
                  args[0]->full_name());
         proto_path->chop();
         return false;
       }
+
+      if (wr->isNull())
+      {
+        proto_path->chop();
+        return true;
+      }
+
       offset= dot_start + 1;
       dot_start= proto_path->strstr(dot, offset);
     }
@@ -66,12 +76,15 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
                  args[0]->full_name());
         return false;
       }
-      if (wr->extract(proto_field) == false)
+      if (wr->extract(proto_field))
       {
         my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field->c_ptr(),
                  args[0]->full_name());
         return false;
       }
+
+      if (wr->isNull())
+        return true;
     }
   }
   return true;
@@ -135,8 +148,13 @@ String *Item_proto_func::val_str(String *str)
   }
 
   if (val_proto(&wr) == false)
-    DBUG_RETURN(str);
+    DBUG_RETURN(NULL);
 
+  if (wr.isNull())
+  {
+    null_value= true;
+    DBUG_RETURN(NULL);
+  }
   wr.to_text(str);
   DBUG_RETURN(str);
 }
@@ -163,10 +181,11 @@ my_decimal *Item_proto_func::val_decimal(my_decimal *decimal_value)
   Get a PROTOBUF value from the item indicated by arg_idx.
   @param[in,out] args    the arguments to the function
   @param[in]     arg_idx the argument index
+  @param[out]    wr      the Proto_wrapper for this value
 
   @return true if a PROTOBUF value (or NULL) is found, else false
 */
-bool proto_value(Item **args, uint arg_idx, String *result)
+bool proto_value(Item **args, uint arg_idx, Proto_wrapper *wr)
 {
   Item *arg= args[arg_idx];
   bool ok= true;
@@ -182,11 +201,7 @@ bool proto_value(Item **args, uint arg_idx, String *result)
   }
   else
   {
-    Proto_wrapper wr;
-    ok= arg->val_proto(&wr);
-    if (!ok)
-      return false;
-    ok= wr.to_text(result);
+    ok= arg->val_proto(wr);
   }
   return ok;
 }

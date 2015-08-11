@@ -3,6 +3,7 @@
 
 #include "sql_string.h"
 #include "item_strfunc.h"       // Item_func
+#include "proto_manager.h"      // Proto_wrapper
 
 /* PROTOBUF function support  */
 
@@ -37,6 +38,15 @@ public:
   double val_real();
   my_decimal *val_decimal(my_decimal *decimal_value);
 
+   void update_null_value ()
+   {
+       Proto_wrapper wr;
+       val_proto(&wr);
+       if (wr.isNull())
+         null_value= true;
+       else
+         null_value= false;
+   }
   Item_result cast_to_int_type () const { return INT_RESULT; }
 };
 
@@ -58,5 +68,5 @@ public:
   bool val_proto(Proto_wrapper *wr);
 };
 
-bool proto_value(Item **args, uint arg_idx, String *result);
+bool proto_value(Item **args, uint arg_idx, Proto_wrapper *wr);
 #endif /* ITEM_PROTO_FUNC_INCLUDED */

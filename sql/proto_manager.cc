@@ -307,6 +307,13 @@ bool Proto_manager::construct_wrapper(String *file_path, String *field,
 
 bool Proto_wrapper::extract(String *field)
 {
+  // Check if the field is defined in the proto definition.
+  const Descriptor *desc = message->GetDescriptor();
+  std::string field_name(field->c_ptr());
+
+  if (!desc->FindFieldByName(field_name))
+    return true;
+
   const Reflection *refl= message->GetReflection();
   DBUG_ASSERT(refl);
   std::vector<const FieldDescriptor *> fdescs;
@@ -316,7 +323,6 @@ bool Proto_wrapper::extract(String *field)
   for (uint32 i= 0; i < fdescs.size(); ++i)
   {
     const FieldDescriptor *fdesc= fdescs[i];
-    std::string field_name(field->c_ptr());
 
     if (!(fdesc->name().compare(field_name) == 0))
       refl->ClearField(message, fdesc);
@@ -328,9 +334,12 @@ bool Proto_wrapper::extract(String *field)
     }
   }
 
-  if (!found_field)
-    return false;
-  return true;
+  if (found_field)
+    setLeaf(); // this is definitely not a message, so it must be a leaf
+  else
+    setNull(); // we have the field in the definition, but we didn't find it
+
+  return false;
 }
 
 bool Proto_wrapper::to_text(String *val_ptr)
@@ -343,7 +352,7 @@ bool Proto_wrapper::to_text(String *val_ptr)
   val_ptr->length(0);
   if (!is_null)
   {
-    if (number_of_fields() > 1)
+    if (!is_leaf)
     {
       TextFormat::Print(*message, &sos);
       std::replace(out_str.begin(), out_str.end(), '\n', ' ');
@@ -356,10 +365,8 @@ bool Proto_wrapper::to_text(String *val_ptr)
   }
   else
   {
-    // TODO(fanton): will fix this in a future commit. We should find a
-    // way to propagate this upwards as a NULL value (probably by
-    // changing the function parameter to be a Proto_wrapper and do the
-    // checks in the caller.
+    // We normally should never reach this branch, but if we do, than
+    // "try" to announce that the value is NULL somehow.
     val_ptr->append("NULL");
   }
 
@@ -371,17 +378,7 @@ bool Proto_wrapper::absorb_message(const Reflection *refl,
 {
   const Message& msg = refl->GetMessage(*message, fdesc);
   message = (Message *)&msg;
-  return true;
-}
-
-uint32 Proto_wrapper::number_of_fields()
-{
-  const Reflection *refl = message->GetReflection();
-  DBUG_ASSERT(refl);
-  std::vector<const FieldDescriptor *> fdescs;
-
-  refl->ListFields(*message, &fdescs);
-  return fdescs.size();
+  return false;
 }
 
 double Proto_wrapper::val_real()
@@ -440,7 +437,15 @@ bool Proto_wrapper::to_text_only_vals(String *val_ptr)
     const FieldDescriptor *fdesc = fdescs[i];
     std::string out_str;
     TextFormat::PrintFieldValueToString(*message, fdesc, -1, &out_str);
-    val_ptr->append(out_str.c_str());
+
+    // If we have a string, delete the surrounding quotes to keep
+    // consistency with MySQL strings.
+    if (fdesc->type() == FieldDescriptor::TYPE_STRING)
+    {
+      out_str.erase(0, 1);
+      out_str.erase(out_str.size() - 1);
+    }
+    val_ptr->append(out_str.c_str(), out_str.length());
     val_ptr->append(" ");
   }
 

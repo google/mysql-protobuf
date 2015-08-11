@@ -2933,9 +2933,12 @@ bool Item_field::val_proto(Proto_wrapper *result)
 {
   DBUG_ASSERT(fixed);
   DBUG_ASSERT(field_type() == MYSQL_TYPE_PROTOBUF);
-  null_value= field->is_null();
-  if (null_value)
+
+  if (field->is_null())
+  {
+    result->setNull();
     return true;
+  }
   return down_cast<Field_proto *>(field)->val_proto(result);
 }
 
@@ -7461,16 +7464,26 @@ bool Item::send(Protocol *protocol, String *buffer)
     }
     break;
   }
-  case MYSQL_TYPE_PROTOBUF: // TODO(fanton): create a proto wrapper
+  case MYSQL_TYPE_PROTOBUF:
   {
+    Proto_wrapper wr;
     Item *args[] = {this};
     String str;
+    null_value= false;
 
-    if (proto_value(args, 0, &str))
+    if (proto_value(args, 0, &wr) && !null_value)
     {
-      buffer->length(0);
-      buffer->append(str);
-      result= protocol->store(buffer);
+      if (wr.isNull())
+      {
+        return protocol->store_null();
+      }
+      else
+      {
+        buffer->length(0);
+        wr.to_text(&str);
+        buffer->append(str);
+        result= protocol->store(buffer);
+      }
     }
     break;
   }
