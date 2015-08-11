@@ -60,7 +60,8 @@ static bool make_empty_rec(THD *thd, int file,
 			   uint table_options,
 			   List<Create_field> &create_fields,
 			   uint reclength, ulong data_offset,
-                           handler *handler);
+                           handler *handler, const char *db,
+                           const char *table_name);
 /**
   An interceptor to hijack ER_TOO_MANY_FIELDS error from
   pack_screens and retry again without UNIREG screens.
@@ -314,9 +315,9 @@ bool mysql_create_frm(THD *thd, const char *file_name,
   mysql_file_seek(file,
                   (ulong) uint2korr(fileinfo+6) + (ulong) key_buff_length,
                   MY_SEEK_SET, MYF(0));
-  if (make_empty_rec(thd,file,
-                     create_info->table_options,
-		     create_fields,reclength, data_offset, db_file))
+  if (make_empty_rec(thd,file, create_info->table_options,
+		     create_fields,reclength, data_offset,
+                     db_file, db, table))
     goto err;
 
   int2store(buff, static_cast<uint16>(create_info->connect_string.length));
@@ -1109,7 +1110,8 @@ static bool pack_fields(File file, List<Create_field> &create_fields,
 */
 
 bool make_default_value(THD *thd, TABLE *table, Create_field *field,
-                        uchar *rec_pos, uchar *null_pos, uint *null_count)
+                        uchar *rec_pos, uchar *null_pos, uint *null_count,
+                        const char *db, const char *table_name )
 {
   Field *regfield= make_field(table->s,
                               rec_pos + field->offset,
@@ -1153,7 +1155,14 @@ bool make_default_value(THD *thd, TABLE *table, Create_field *field,
       proto_def.append(field->comment.str, field->comment.length);
       Proto_manager &proto_mgr= Proto_manager::get_singleton();
 
-      if (proto_mgr.proto_is_valid(&proto_def) == false)
+      String field_path, field_name;
+      field_path.append(db);
+      field_path.append("/");
+      field_path.append(table_name);
+      field_name.append(regfield->field_name);
+
+      if (proto_mgr.proto_is_valid(&proto_def, &field_path,
+                                   &field_name, thd->mem_root) == false)
       {
         my_error(ER_INVALID_PROTO_DEFINITION, MYF(0),
                  field->comment.str, regfield->field_name);
@@ -1241,7 +1250,9 @@ static bool make_empty_rec(THD *thd, File file,
 			   List<Create_field> &create_fields,
 			   uint reclength,
                            ulong data_offset,
-                           handler *handler)
+                           handler *handler,
+                           const char *db,
+                           const char *table_name)
 {
   int error= 0;
   uint null_count;
@@ -1287,7 +1298,7 @@ static bool make_empty_rec(THD *thd, File file,
         in order to allocate null bits from preamble tail as well.
       */
       if (make_default_value(thd, &table, field, buff + data_offset,
-                             null_pos, &null_count))
+                             null_pos, &null_count, db, table_name))
       {
         error= 1;
         goto err;
@@ -1304,7 +1315,7 @@ static bool make_empty_rec(THD *thd, File file,
       if (!field->stored_in_db)
       {
         if (make_default_value(thd, &table, field, buff + data_offset,
-                               null_pos, &null_count))
+                               null_pos, &null_count, db, table_name))
         {
           error= 1;
           goto err;

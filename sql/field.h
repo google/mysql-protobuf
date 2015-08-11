@@ -3902,15 +3902,19 @@ public:
 /// A field that stores a PROTOBUF value.
 class Field_proto :public Field_blob
 {
+private:
+  LEX_STRING m_db;
   type_conversion_status unsupported_conversion();
 public:
     Field_proto(uchar *ptr_arg, uchar *null_ptr_arg, uint null_bit_arg,
                 enum utype unireg_check_arg, const char *field_name_arg,
-                TABLE_SHARE *share, uint blob_pack_length)
+                TABLE_SHARE *share, uint blob_pack_length, LEX_STRING& db)
     : Field_blob(ptr_arg, null_ptr_arg, null_bit_arg, unireg_check_arg,
                  field_name_arg, share, blob_pack_length,
                  &my_charset_utf8mb4_bin)
-  {}
+  {
+    m_db = db;
+  }
 
   Field_proto(uint32 len_arg,bool maybe_null_arg, const char *field_name_arg,
              const CHARSET_INFO *cs, bool set_packlength)

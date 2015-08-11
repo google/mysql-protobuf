@@ -1,6 +1,7 @@
 /* PROTO Manager */
 
 #include "sql_class.h"
+#include "parse_file.h"
 #include "proto_manager.h"
 
 #include "google/protobuf/compiler/parser.h"
@@ -19,7 +20,93 @@
 
 using namespace google::protobuf;
 
-bool Proto_manager::proto_is_valid(String *str)
+const LEX_STRING proto_file_type= { C_STRING_WITH_LEN("PROTOS") };
+
+struct proto_file_data
+{
+  List<LEX_STRING> definitions;
+  List<LEX_STRING> fields;
+};
+
+static File_option file_params[] =
+{
+  {
+    { C_STRING_WITH_LEN("protodefs") },
+    my_offsetof(struct proto_file_data, definitions),
+    FILE_OPTIONS_STRLIST
+  },
+  {
+    { C_STRING_WITH_LEN("fields") },
+    my_offsetof(struct proto_file_data, fields),
+    FILE_OPTIONS_STRLIST
+  },
+  { {0, 0}, 0, FILE_OPTIONS_STRING }
+};
+
+static bool read_proto_file(struct proto_file_data *data,
+                            LEX_STRING *file_name, MEM_ROOT *mem_root)
+{
+  File_parser *parser= sql_parse_prepare(file_name, mem_root, true);
+
+  if (!parser) {
+    DBUG_PRINT("error", ("Error getting parser"));
+    return false;
+  }
+
+  parser->parse((uchar*)data, mem_root, file_params, 3, NULL);
+  return true;
+}
+
+static bool append_to_proto_file(String *field_path, String *field_name,
+                                 String *str, MEM_ROOT *mem_root)
+{
+  struct proto_file_data data;
+
+  field_path->append(PROTO_FILE_EXTENSION);
+  LEX_STRING file_name = field_path->lex_string();
+  LEX_STRING proto_def = str->lex_string();
+  LEX_STRING field = field_name->lex_string();
+
+  if (!access(file_name.str, F_OK))
+    read_proto_file(&data, &file_name, mem_root);
+
+  data.definitions.push_back(&proto_def);
+  data.fields.push_back(&field);
+
+  if (sql_create_definition_file(NULL, &file_name, &proto_file_type,
+                                 (uchar*)&data, file_params))
+    return false;
+  return true;
+}
+
+static bool find_proto_definition(struct proto_file_data *data, String *field,
+                                  String *output)
+{
+  List_iterator_fast<LEX_STRING> it_definition(data->definitions);
+  List_iterator_fast<LEX_STRING> it_field(data->fields);
+
+  while (true) {
+    LEX_STRING *definition = it_definition++;
+    LEX_STRING *fld = it_field++;
+
+    String fld_string;
+    fld_string.append(fld);
+
+    if (!definition || !fld)
+      break;
+
+    if (!stringcmp(field, &fld_string)) {
+      output->length(0);
+      output->append(definition);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool Proto_manager::proto_is_valid(String *str, String *field_path,
+                                   String *field_name, MEM_ROOT *mem_root)
 {
   DescriptorPool pool;
   String desc_name;
@@ -31,25 +118,39 @@ bool Proto_manager::proto_is_valid(String *str)
    * to use from pool_map.
    */
   if (create_descriptor(str, &pool, &desc_name) != NULL)
-      return true;
+      return append_to_proto_file(field_path, field_name, str, mem_root);
   return false;
 }
 
-// Parameter 'field_path' should be something like TABLE.COLUMN.
-Descriptor *Proto_manager::get_descriptor(String *field_path, String *str)
+// Parameter file_path should be something like DATABASE/TABLE.
+Descriptor *Proto_manager::get_descriptor(String *file_path, String *field,
+                                          MEM_ROOT *mem_root)
 {
-  std::map<std::string, Descriptor*>::iterator it=
-    descriptor_map.find(field_path->c_ptr());
+  String field_path;
+  field_path.append(file_path->c_ptr(), file_path->length());
+  field_path.append(field->c_ptr(), field->length());
+
+  std::map<std::string, Descriptor*>::iterator it =
+    descriptor_map.find(field_path.c_ptr());
 
   if (it != descriptor_map.end())
     return it->second;
 
+  file_path->append(PROTO_FILE_EXTENSION);
+
+  LEX_STRING file_name= file_path->lex_string();
+  struct proto_file_data data;
+  String proto_def;
+
+  DBUG_ASSERT(read_proto_file(&data, &file_name, mem_root));
+  DBUG_ASSERT(find_proto_definition(&data, field, &proto_def));
+
   DescriptorPool *pool= new DescriptorPool;
-  const Descriptor *mdesc= create_descriptor(str, pool, field_path);
-  pool_map[field_path->c_ptr()]= pool;
+  const Descriptor *mdesc= create_descriptor(&proto_def, pool, &field_path);
+  pool_map[field_path.c_ptr()]= pool;
 
   if (mdesc != NULL)
-    descriptor_map[field_path->c_ptr()]= (Descriptor *)mdesc;
+    descriptor_map[field_path.c_ptr()]= (Descriptor *)mdesc;
   return (Descriptor *)mdesc;
 }
 
@@ -129,11 +230,12 @@ const Descriptor *Proto_manager::create_descriptor(String *str,
   return fdesc->FindMessageTypeByName(message_name);
 }
 
-bool Proto_manager::encode(String *field_path, String *message,
-                           String *proto_def, String *output)
+bool Proto_manager::encode(String *file_path, String *field, String *message,
+                           MEM_ROOT *mem_root, String *output)
 {
-  Message *mutable_msg= construct_message(field_path, proto_def);
+  Message *mutable_msg;
 
+  mutable_msg= construct_message(file_path, field, mem_root);
   DBUG_ASSERT(mutable_msg);
 
   std::stringstream ss(std::string(message->c_ptr(),
@@ -154,11 +256,11 @@ bool Proto_manager::encode(String *field_path, String *message,
   return false;
 }
 
-bool Proto_manager::decode(String *field_path, String *message,
-                           String *proto_def, String *output)
+bool Proto_manager::decode(String *file_path, String *field, String *message,
+                           MEM_ROOT *mem_root, String *output)
 {
   Proto_wrapper wr;
-  if (construct_wrapper(field_path, message, proto_def, &wr))
+  if (construct_wrapper(file_path, field, message, mem_root, &wr))
   {
     DBUG_PRINT("error", ("Error constructing wrapper."));
     return true;
@@ -168,10 +270,11 @@ bool Proto_manager::decode(String *field_path, String *message,
   return false;
 }
 
-Message *Proto_manager::construct_message(String *field_path, String *proto_def)
+Message *Proto_manager::construct_message(String *file_path, String *field,
+                                          MEM_ROOT *mem_root)
 {
   Descriptor *proto_descr= NULL;
-  proto_descr= get_descriptor(field_path, proto_def);
+  proto_descr= get_descriptor(file_path, field, mem_root);
 
   if (proto_descr == NULL)
   {
@@ -183,11 +286,11 @@ Message *Proto_manager::construct_message(String *field_path, String *proto_def)
   return proto_msg->New();
 }
 
-bool Proto_manager::construct_wrapper(String *field_path, String *message,
-                                      String *proto_def, Proto_wrapper *wr)
+bool Proto_manager::construct_wrapper(String *file_path, String *field,
+                                      String *message, MEM_ROOT *mem_root,
+                                      Proto_wrapper *wr)
 {
-  Message *mutable_msg= construct_message(field_path, proto_def);
-
+  Message *mutable_msg = construct_message(file_path, field, mem_root);
   DBUG_ASSERT(mutable_msg);
 
   std::stringstream ss(std::string(message->c_ptr(),
@@ -263,7 +366,8 @@ bool Proto_wrapper::to_text(String *val_ptr)
   return ret;
 }
 
-bool Proto_wrapper::absorb_message(const Reflection *refl, const FieldDescriptor *fdesc)
+bool Proto_wrapper::absorb_message(const Reflection *refl,
+                                   const FieldDescriptor *fdesc)
 {
   const Message& msg = refl->GetMessage(*message, fdesc);
   message = (Message *)&msg;

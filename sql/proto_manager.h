@@ -9,6 +9,7 @@
 #include <string>
 
 #define MAX_MESSAGE_NAME_LENGTH     1024
+#define PROTO_FILE_EXTENSION        ".prt"
 
 class Proto_wrapper;
 
@@ -55,18 +56,21 @@ public:
     return err_collector;
   }
 
-  bool proto_is_valid(String *str);
+  bool proto_is_valid(String *str, String *field_path, String *field_name,
+                      MEM_ROOT *mem_root);
   google::protobuf::Message *construct_message(String *field_path,
-                                               String *proto_def);
-  bool construct_wrapper(String *field_path, String *message,
-                         String *proto_def, Proto_wrapper *wr);
-  bool encode(String *field_path, String *message, String *proto_def,
-              String *output);
-  bool decode(String *field_path, String *message, String *proto_def,
-              String *output);
+                                               String *proto_def,
+                                               MEM_ROOT *mem_root);
+  bool construct_wrapper(String *file_path, String *field, String *message,
+                         MEM_ROOT *mem_root, Proto_wrapper *wr);
+  bool encode(String *field_path, String *field, String *message,
+              MEM_ROOT *mem_root, String *output);
+  bool decode(String *file_path, String *field, String *message,
+              MEM_ROOT *mem_root, String *output);
 
-protected:
-  google::protobuf::Descriptor *get_descriptor(String *field_path, String *str);
+ protected:
+  google::protobuf::Descriptor *get_descriptor(String *field_path, String *str,
+                                               MEM_ROOT *mem_root);
   const google::protobuf::Descriptor
     *create_descriptor(String *str,
                        google::protobuf::DescriptorPool *pool,

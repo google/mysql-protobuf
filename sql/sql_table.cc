@@ -2550,6 +2550,17 @@ int mysql_rm_table_no_locks(THD *thd, TABLE_LIST *tables, bool if_exists,
           new_error= drop_all_triggers(thd, db, table->table_name);
         }
         error|= new_error;
+
+        /* TODO(fanton): Write some better code X_X. */
+        String prt_path;
+        prt_path.append(db);
+        prt_path.append("/");
+        prt_path.append(table->table_name);
+        prt_path.append(".prt");
+
+        if (!access(prt_path.c_ptr(), F_OK))
+          error|= mysql_file_delete(key_file_prt, prt_path.c_ptr(), MYF(MY_WME));
+
         /* Invalidate even if we failed to delete the .FRM file. */
         query_cache.invalidate_single(thd, table, FALSE);
       }

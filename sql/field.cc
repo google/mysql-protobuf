@@ -9149,24 +9149,21 @@ type_conversion_status Field_proto::store(const char *from, size_t length,
   const char *s;
   size_t ss;
   String v(from, length, cs);
-  String proto_def;
 
   if (ensure_utf8mb4(&v, &value, &s, &ss, true))
     DBUG_RETURN(TYPE_ERR_BAD_VALUE);
-
-  proto_def.length(0);
-  proto_def.append(comment.str, comment.length);
 
   value.length(0);
   value.set_charset(&my_charset_bin);
 
   Proto_manager& proto_mgr = Proto_manager::get_singleton();
-  String field_path;
-  field_path.append(*table_name);
-  field_path.append('.');
-  field_path.append(field_name);
+  String file_path, fld_name;
+  file_path.append(orig_table->s->db);
+  file_path.append("/");
+  file_path.append(orig_table->s->table_name);
+  fld_name.append(field_name);
 
-  if (proto_mgr.encode(&field_path, &v, &proto_def, &value))
+  if (proto_mgr.encode(&file_path, &fld_name, &v, &table->mem_root, &value))
   {
     DBUG_PRINT("error", ("Proto encoding failed: %s", v.c_ptr()));
     DBUG_RETURN(unsupported_conversion());
@@ -9223,23 +9220,21 @@ type_conversion_status Field_proto::store_time(MYSQL_TIME *ltime, uint8 dec_arg)
 
 String *Field_proto::val_str(String *tmp, String *val_ptr)
 {
-  String proto_def;
   Proto_manager& proto_mgr = Proto_manager::get_singleton();
   DBUG_ENTER("Field_proto::val_str");
   ASSERT_COLUMN_MARKED_FOR_READ;
 
-  proto_def.length(0);
-  proto_def.append(comment.str, comment.length);
+  String file_path, fld_name;
+  file_path.append(orig_table->s->db);
+  file_path.append("/");
+  file_path.append(orig_table->s->table_name);
+  fld_name.append(field_name);
 
   tmp->length(0);
-
-  String field_path;
-  field_path.append(*table_name);
-  field_path.append('.');
-  field_path.append(field_name);
-
   tmp= Field_blob::val_str(tmp, tmp);
-  if (proto_mgr.decode(&field_path, tmp, &proto_def, val_ptr))
+
+  if (proto_mgr.decode(&file_path, &fld_name, tmp, &table->mem_root,
+                       val_ptr))
     DBUG_PRINT("error", ("Proto decoding failed: %s", tmp->c_ptr()));
 
   DBUG_RETURN(val_ptr);
@@ -9254,22 +9249,21 @@ longlong Field_proto::val_int()
 
 bool Field_proto::val_proto(Proto_wrapper *wr)
 {
-  String proto_def, buf, *tmp;
+  String buf, *tmp;
   DBUG_ENTER("Field_proto::val_proto");
   Proto_manager& proto_mgr= Proto_manager::get_singleton();
 
   ASSERT_COLUMN_MARKED_FOR_READ;
 
-  proto_def.length(0);
-  proto_def.append(comment.str, comment.length);
-
-  String field_path;
-  field_path.append(*table_name);
-  field_path.append('.');
-  field_path.append(field_name);
+  String file_path, fld_name;
+  file_path.append(orig_table->s->db);
+  file_path.append("/");
+  file_path.append(orig_table->s->table_name);
+  fld_name.append(field_name);
 
   tmp= Field_blob::val_str(&buf, &buf);
-  if (proto_mgr.construct_wrapper(&field_path, tmp, &proto_def, wr))
+  if (proto_mgr.construct_wrapper(&file_path, &fld_name, tmp,
+                                  &table->mem_root, wr))
   {
     DBUG_PRINT("error", ("Constructing wrapper failed."));
     DBUG_RETURN(false);
@@ -11269,7 +11263,7 @@ Field *make_field(TABLE_SHARE *share, uchar *ptr, size_t field_length,
     if (f_is_proto(pack_flag))
       return new Field_proto(ptr, null_pos, null_bit,
                              unireg_check, field_name, share,
-                             pack_length);
+                             pack_length, share->db);
 
     if (f_is_json(pack_flag))
       return new Field_json(ptr, null_pos, null_bit,
