@@ -365,6 +365,9 @@ bool Proto_manager::construct_wrapper_value(const Descriptor *desc, String *text
   }
 
   wr->setMessage(mutable_msg);
+  if (fdesc->is_repeated())
+    wr->setRepeatedIndex(0);
+
   return false;
 }
 
@@ -401,6 +404,41 @@ bool Proto_wrapper::extract(String *field)
     setLeaf(); // this is definitely not a message, so it must be a leaf
   else
     setNull(); // we have the field in the definition, but we didn't find it
+
+  return false;
+}
+
+/**
+ * This function should be called only when we know that we have a
+ * repeated field at the top level.
+ */
+bool Proto_wrapper::extract(int index)
+{
+  const Reflection *refl= message->GetReflection();
+  DBUG_ASSERT(refl);
+
+  std::vector<const FieldDescriptor *> fdescs;
+  refl->ListFields(*message, &fdescs);
+
+  const FieldDescriptor *fdesc= fdescs[0];
+  if (!fdesc->is_repeated())
+    return true;
+
+  if (fdescs.size() != 1)
+  {
+    setNull();
+    return false;
+  }
+
+  int size= refl->FieldSize(*message, fdesc);
+  if (index < 0 || index >= size)
+  {
+    setNull();
+    return false;
+  }
+
+  setRepeatedIndex(index);
+  setLeaf();
 
   return false;
 }
@@ -452,6 +490,13 @@ bool update_field(Message *message, const FieldDescriptor *fdesc, Item *value)
   {
     refl->ClearField(message, fdesc);
     return false;
+  }
+
+  if (fdesc->is_repeated())
+  {
+    my_error(ER_NOT_SUPPORTED_YET, MYF(0),
+             "updating PROTOBUF repeated fields.");
+    return true;
   }
 
   switch (fdesc->type())
@@ -632,23 +677,39 @@ double Proto_wrapper::val_real()
   switch (fdescs[0]->type())
   {
     case FieldDescriptor::TYPE_DOUBLE:
+      if (fdescs[0]->is_repeated())
+        return refl->GetRepeatedDouble(*message, fdescs[0], repeated_index);
       return refl->GetDouble(*message, fdescs[0]);
     case FieldDescriptor::TYPE_FLOAT:
+      if (fdescs[0]->is_repeated())
+        return (double)refl->GetRepeatedFloat(*message, fdescs[0], repeated_index);
       return (double)refl->GetFloat(*message, fdescs[0]);
     case FieldDescriptor::TYPE_INT32:
+      if (fdescs[0]->is_repeated())
+        return (double)refl->GetRepeatedInt32(*message, fdescs[0], repeated_index);
       return (double)refl->GetInt32(*message, fdescs[0]);
     case FieldDescriptor::TYPE_INT64:
+      if (fdescs[0]->is_repeated())
+        return (double)refl->GetRepeatedInt64(*message, fdescs[0], repeated_index);
       return (double)refl->GetInt64(*message, fdescs[0]);
     case FieldDescriptor::TYPE_UINT32:
+      if (fdescs[0]->is_repeated())
+        return (double)refl->GetRepeatedUInt32(*message, fdescs[0], repeated_index);
       return (double)refl->GetUInt32(*message, fdescs[0]);
     case FieldDescriptor::TYPE_UINT64:
+      if (fdescs[0]->is_repeated())
+        return (double)refl->GetRepeatedUInt64(*message, fdescs[0], repeated_index);
       return (double)refl->GetUInt64(*message, fdescs[0]);
     case FieldDescriptor::TYPE_STRING:
     {
       char *end_not_used;
       int not_used;
+      string str;
 
-      string str = refl->GetString(*message, fdescs[0]);
+      if (fdescs[0]->is_repeated())
+        str= refl->GetRepeatedString(*message, fdescs[0], repeated_index);
+      else
+        str= refl->GetString(*message, fdescs[0]);
       return my_strntod(&my_charset_utf8_bin, &str[0], str.size(), &end_not_used, &not_used);
     }
     default:
@@ -663,7 +724,7 @@ double Proto_wrapper::val_real()
 // syntax.
 bool Proto_wrapper::to_text_only_vals(String *val_ptr)
 {
-  const Reflection *refl = message->GetReflection();
+  const Reflection *refl= message->GetReflection();
   DBUG_ASSERT(refl);
   std::vector<const FieldDescriptor *> fdescs;
 
@@ -671,9 +732,36 @@ bool Proto_wrapper::to_text_only_vals(String *val_ptr)
   val_ptr->length(0);
   for (uint32 i= 0; i< fdescs.size(); ++i)
   {
-    const FieldDescriptor *fdesc = fdescs[i];
+    const FieldDescriptor *fdesc= fdescs[i];
     std::string out_str;
-    TextFormat::PrintFieldValueToString(*message, fdesc, -1, &out_str);
+    if (!fdesc->is_repeated())
+      TextFormat::PrintFieldValueToString(*message, fdesc, -1, &out_str);
+    else
+    {
+      int size= refl->FieldSize(*message, fdesc);
+
+      // If we didn't extract a field, print all values.
+      if (repeated_index == -1)
+      {
+        out_str= "[";
+
+        for (int i= 0; i < size; i++)
+        {
+          std::string tmp;
+          TextFormat::PrintFieldValueToString(*message, fdesc, i, &tmp);
+          out_str.append(tmp);
+          out_str.append(", ");
+        }
+        if (size > 0)
+          out_str.erase(out_str.size() - 2);
+        out_str.append("]");
+      }
+      else
+      {
+        TextFormat::PrintFieldValueToString(*message, fdesc,
+                                            repeated_index, &out_str);
+      }
+    }
 
     // If we have a string, delete the surrounding quotes to keep
     // consistency with MySQL strings.

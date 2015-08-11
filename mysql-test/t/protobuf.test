@@ -240,8 +240,52 @@ SELECT * from t2;
 --error ER_INVALID_PROTO_VALUE_FOR_CAST
 UPDATE t2 SET q[i] = p;
 
+# repeatead fields checks
+CREATE TABLE t3(i int,
+                p protobuf 'message M { repeated int64 iarr = 1; repeated string sarr = 2; }');
+
+INSERT INTO t3 VALUES(0, 'iarr: [1, 2, 3] sarr: ["str1", "str2"]');
+INSERT INTO t3 VALUES(1, 'iarr: [11] sarr: ["str11", "str12"]');
+INSERT INTO t3 VALUES(2, 'sarr: ["str21", "str22"]');
+INSERT INTO t3 VALUES(3, 'iarr: [31, 32, 33] sarr: ["str31"]');
+INSERT INTO t3 VALUES(4, 'iarr: [41, 42, 43]');
+INSERT INTO t3 VALUES(5, 'iarr: [51, 52] sarr: ["51", "52"]');
+INSERT INTO t3 VALUES(6, '');
+INSERT INTO t3 VALUES(7, NULL);
+
+SELECT * from t3;
+SELECT p[iarr] from t3;
+SELECT p[sarr] from t3;
+
+SELECT p[iarr][1] from t3;
+SELECT p[sarr][1] from t3;
+
+SELECT * from t3 where p[iarr][0] = 31;
+SELECT * from t3 where p[sarr][0] = "str1";
+
+SELECT * from t3 where p[iarr] = p[iarr];
+SELECT * from t3 where p[iarr][2] = p[iarr][2];
+SELECT * from t3 where p[iarr][0] = p[sarr][0];
+SELECT * from t3 where p[iarr][0] = p[iarr][1] - 1;
+SELECT * from t3 where p[iarr][0] = p[sarr][1] - 1;
+
+# expect nothing
+SELECT * from t3 where p[iarr] = 42;
+SELECT * from t3 where p[iarr] = "abc";
+SELECT * from t3 where p[iarr][4] is not NULL;
+SELECT * from t3 where p[sarr][4] is not NULL;
+
+# check repeated field selector on non repeated field
+ALTER TABLE t3 modify column p protobuf 'message M { repeated int64 iarr = 1; repeated string sarr = 2; optional int64 i = 3; }';
+UPDATE t3 SET p[i] = p[iarr][0];
+SELECT * from t3;
+
+--error ER_INVALID_PROTO_REPEATED_FIELD
+SELECT * from t3 where p[i][0] = 0;
+
 DROP TABLE t1;
 DROP TABLE t2;
+DROP TABLE t3;
 
 # Local Variables:
 # mode: sql

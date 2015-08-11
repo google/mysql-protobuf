@@ -7618,6 +7618,12 @@ ER_INVALID_PROTO_FIELD 22032
 ER_INVALID_PROTO_VALUE_FOR_CAST 22018
   eng "Invalid PROTOBUF value for CAST to %s: Cannot CAST PROTOBUF from column %s."
 
+ER_NEGATIVE_PROTO_REPEATED_INDEX 22032
+  eng "Invalid PROTOBUF negative index for field '%s' from column '%-.200s'."
+
+ER_INVALID_PROTO_REPEATED_FIELD 22032
+  eng "Invalid PROTOBUF repeated field: Field '%s' from column '%-.200s' is not a repeated field."
+
 #
 #  End of 5.7 error messages.
 #

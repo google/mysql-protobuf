@@ -494,5 +494,118 @@ i	p	q
 6	NULL	NULL
 UPDATE t2 SET q[i] = p;
 ERROR 22018: Invalid PROTOBUF value for CAST to INTEGER: Cannot CAST PROTOBUF from column p.
+CREATE TABLE t3(i int,
+p protobuf 'message M { repeated int64 iarr = 1; repeated string sarr = 2; }');
+INSERT INTO t3 VALUES(0, 'iarr: [1, 2, 3] sarr: ["str1", "str2"]');
+INSERT INTO t3 VALUES(1, 'iarr: [11] sarr: ["str11", "str12"]');
+INSERT INTO t3 VALUES(2, 'sarr: ["str21", "str22"]');
+INSERT INTO t3 VALUES(3, 'iarr: [31, 32, 33] sarr: ["str31"]');
+INSERT INTO t3 VALUES(4, 'iarr: [41, 42, 43]');
+INSERT INTO t3 VALUES(5, 'iarr: [51, 52] sarr: ["51", "52"]');
+INSERT INTO t3 VALUES(6, '');
+INSERT INTO t3 VALUES(7, NULL);
+SELECT * from t3;
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" 
+1	iarr: 11 sarr: "str11" sarr: "str12" 
+2	sarr: "str21" sarr: "str22" 
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" 
+4	iarr: 41 iarr: 42 iarr: 43 
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" 
+6	
+7	NULL
+SELECT p[iarr] from t3;
+p[iarr]
+[1, 2, 3]
+[11]
+NULL
+[31, 32, 33]
+[41, 42, 43]
+[51, 52]
+NULL
+NULL
+SELECT p[sarr] from t3;
+p[sarr]
+"str1", "str2"
+"str11", "str12"
+"str21", "str22"
+"str31"
+NULL
+"51", "52"
+NULL
+NULL
+SELECT p[iarr][1] from t3;
+p[iarr][1]
+2
+NULL
+NULL
+32
+42
+52
+NULL
+NULL
+SELECT p[sarr][1] from t3;
+p[sarr][1]
+str2
+str12
+str22
+NULL
+NULL
+52
+NULL
+NULL
+SELECT * from t3 where p[iarr][0] = 31;
+i	p
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" 
+SELECT * from t3 where p[sarr][0] = "str1";
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" 
+SELECT * from t3 where p[iarr] = p[iarr];
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" 
+1	iarr: 11 sarr: "str11" sarr: "str12" 
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" 
+4	iarr: 41 iarr: 42 iarr: 43 
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" 
+SELECT * from t3 where p[iarr][2] = p[iarr][2];
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" 
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" 
+4	iarr: 41 iarr: 42 iarr: 43 
+SELECT * from t3 where p[iarr][0] = p[sarr][0];
+i	p
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" 
+SELECT * from t3 where p[iarr][0] = p[iarr][1] - 1;
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" 
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" 
+4	iarr: 41 iarr: 42 iarr: 43 
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" 
+SELECT * from t3 where p[iarr][0] = p[sarr][1] - 1;
+i	p
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" 
+SELECT * from t3 where p[iarr] = 42;
+i	p
+SELECT * from t3 where p[iarr] = "abc";
+i	p
+SELECT * from t3 where p[iarr][4] is not NULL;
+i	p
+SELECT * from t3 where p[sarr][4] is not NULL;
+i	p
+ALTER TABLE t3 modify column p protobuf 'message M { repeated int64 iarr = 1; repeated string sarr = 2; optional int64 i = 3; }';
+UPDATE t3 SET p[i] = p[iarr][0];
+SELECT * from t3;
+i	p
+0	iarr: 1 iarr: 2 iarr: 3 sarr: "str1" sarr: "str2" i: 1 
+1	iarr: 11 sarr: "str11" sarr: "str12" i: 11 
+2	sarr: "str21" sarr: "str22" i: 0 
+3	iarr: 31 iarr: 32 iarr: 33 sarr: "str31" i: 31 
+4	iarr: 41 iarr: 42 iarr: 43 i: 41 
+5	iarr: 51 iarr: 52 sarr: "51" sarr: "52" i: 51 
+6	i: 0 
+7	i: 0 
+SELECT * from t3 where p[i][0] = 0;
+ERROR 22032: Invalid PROTOBUF repeated field: Field 'i' from column 'test.t3.p' is not a repeated field.
 DROP TABLE t1;
 DROP TABLE t2;
+DROP TABLE t3;

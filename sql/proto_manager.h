@@ -98,13 +98,14 @@ class Proto_wrapper
     google::protobuf::Message *message;
     bool is_null;
     bool is_leaf;
+    int repeated_index;
 
     bool absorb_message(const google::protobuf::Reflection *refl,
                         const google::protobuf::FieldDescriptor *fdesc);
 
   public:
     Proto_wrapper()
-    : message(NULL), is_null(false), is_leaf(false)
+    : message(NULL), is_null(false), is_leaf(false), repeated_index(-1)
     {}
 
     ~Proto_wrapper() {
@@ -135,10 +136,14 @@ class Proto_wrapper
     inline void setLeaf() {
       is_leaf = true;
     }
+    inline void setRepeatedIndex(int index) {
+      repeated_index= index;
+    }
 
     String *getLeafName(String *buf);
 
     bool extract(String *field);
+    bool extract(int index);
     bool update(List<String> *field_path, Item *value);
     bool to_text(String *val_ptr);
     bool to_text_only_vals(String *val_ptr);

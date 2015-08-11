@@ -68,19 +68,40 @@ bool Item_func_protobuf_extract::val_proto(Proto_wrapper *wr)
     for (uint32 i= 1; i< arg_count; i++)
     {
       String *proto_field, val;
-      proto_field= args[i]->val_str(&val);
 
-      if (!proto_field)
+      // Test against repeated fields selector.
+      if (i == arg_count - 1 && args[i]->type() == Item::INT_ITEM)
       {
-        my_error(ER_INVALID_PROTO_FIELD, MYF(0), "NULL",
-                 args[0]->full_name());
-        return false;
+        int index= args[i]->val_int();
+        if (index < 0)
+        {
+          my_error(ER_NEGATIVE_PROTO_REPEATED_INDEX, MYF(0), proto_field->c_ptr(),
+                   args[0]->full_name());
+          return false;
+        }
+        if (wr->extract(index))
+        {
+          my_error(ER_INVALID_PROTO_REPEATED_FIELD, MYF(0), proto_field->c_ptr(),
+                   args[0]->full_name());
+          return false;
+        }
       }
-      if (wr->extract(proto_field))
+      else
       {
-        my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field->c_ptr(),
-                 args[0]->full_name());
-        return false;
+        proto_field= args[i]->val_str(&val);
+
+        if (!proto_field)
+        {
+          my_error(ER_INVALID_PROTO_FIELD, MYF(0), "NULL",
+                   args[0]->full_name());
+          return false;
+        }
+        if (wr->extract(proto_field))
+        {
+          my_error(ER_INVALID_PROTO_FIELD, MYF(0), proto_field->c_ptr(),
+                   args[0]->full_name());
+          return false;
+        }
       }
 
       if (wr->isNull())
