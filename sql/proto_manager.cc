@@ -142,8 +142,11 @@ Descriptor *Proto_manager::get_descriptor(String *file_path, String *field,
   struct proto_file_data data;
   String proto_def;
 
-  DBUG_ASSERT(read_proto_file(&data, &file_name, mem_root));
-  DBUG_ASSERT(find_proto_definition(&data, field, &proto_def));
+  bool success;
+  success= read_proto_file(&data, &file_name, mem_root);
+  DBUG_ASSERT(success);
+  success= find_proto_definition(&data, field, &proto_def);
+  DBUG_ASSERT(success);
 
   DescriptorPool *pool= new DescriptorPool;
   const Descriptor *mdesc= create_descriptor(&proto_def, pool, &field_path);
