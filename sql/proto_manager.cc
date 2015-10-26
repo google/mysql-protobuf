@@ -864,9 +864,15 @@ bool Proto_manager::get_definition(String *file_path, String *field,
   LEX_STRING file_name = file_path->lex_string();
   struct proto_file_data data;
 
-  DBUG_ASSERT(read_proto_file(&data, &file_name, mem_root));
-  DBUG_ASSERT(find_proto_definition(&data, field, output));
-
+  if (!read_proto_file(&data, &file_name, mem_root))
+  {
+    DBUG_ASSERT(0);
+    return true;
+  }
+  if (!find_proto_definition(&data, field, output)) {
+    DBUG_ASSERT(0);
+    return true;
+  }
   return false;
 }
 
