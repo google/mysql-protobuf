@@ -9227,7 +9227,8 @@ type_conversion_status Field_proto::store(Field_proto *field)
 
   Proto_wrapper other_wr;
 
-  DBUG_ASSERT(field->val_proto(&other_wr));
+  if (!field->val_proto(&other_wr))
+    DBUG_RETURN(unsupported_conversion());
 
   String result;
   result.length(0);
@@ -9235,7 +9236,7 @@ type_conversion_status Field_proto::store(Field_proto *field)
   if (!other_wr.isNull())
   {
     String buf;
-    DBUG_ASSERT(other_wr.to_text(&buf));
+    other_wr.to_text(&buf);
     DBUG_RETURN(store(buf.ptr(), buf.length(), buf.charset()));
   }
   store_ptr_and_length(result.ptr(), static_cast<uint32>(result.length()));
