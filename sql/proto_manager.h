@@ -145,6 +145,7 @@ class Proto_wrapper
     bool extract(String *field);
     bool extract(int index);
     bool update(List<String> *field_path, Item *value);
+    bool update_repeated(List<String> *field_path, int index, Item *value);
     bool to_text(String *val_ptr);
     bool to_text_only_vals(String *val_ptr);
     double val_real();
