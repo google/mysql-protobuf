@@ -6377,7 +6377,7 @@ opt_stored_attribute:
 parse_gcol_expr:
           PARSE_GCOL_EXPR_SYM '(' generated_column_func ')'
           {
-            /* 
+            /*
               "PARSE_GCOL_EXPR" can only be used by the SQL server
               when reading a '*.frm' file.
               Prevent the end user from invoking this command.
@@ -11641,7 +11641,18 @@ update_elem:
 
             $$.value= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
           }
-        /* 
+		| ident '[' dot_separated_list ']' '+' equal expr_or_default
+	  	  {
+	  		const LEX_STRING lexstr= { C_STRING_WITH_LEN("protobuf_update_repeated") };
+	  		$$.column= NEW_PTN PTI_simple_ident_ident(@$, $1);
+	  		$3->push_front(NEW_PTN PTI_simple_ident_ident(@$, $1));
+			const LEX_STRING minus_one= { C_STRING_WITH_LEN("-1") };
+			$3->push_back(NEW_PTN PTI_text_literal_text_string(@$,
+                          YYTHD->m_parser_state->m_lip.text_string_is_7bit(), minus_one));
+			$3->push_back($7);
+	  		$$.value= NEW_PTN PTI_function_call_generic_ident_sys(@1, lexstr, $3);
+	  	  }
+        /*
         | simple_ident_q '[' dot_separated_list ']' equal expr_or_default
           {
             TODO(fanton): Make this work.
@@ -15394,7 +15405,7 @@ xid:
           }
           | text_string ',' text_string ',' ulong_num
           {
-            // check for overwflow of xid format id 
+            // check for overwflow of xid format id
             bool format_id_overflow_detected= ($5 > LONG_MAX);
 
             MYSQL_YYABORT_UNLESS($1->length() <= MAXGTRIDSIZE &&

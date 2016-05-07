@@ -497,9 +497,9 @@ bool update_field(Message *message, const FieldDescriptor *fdesc, Item *value)
 
   if (fdesc->is_repeated())
   {
-    my_error(ER_NOT_SUPPORTED_YET, MYF(0),
-             "updating PROTOBUF repeated fields.");
-    return true;
+	my_error(ER_NOT_SUPPORTED_YET, MYF(0),
+		"updating PROTOBUF repeated fields.");
+	return true;
   }
 
   switch (fdesc->type())
@@ -546,7 +546,31 @@ bool update_field(Message *message, const FieldDescriptor *fdesc, Item *value)
   return false;
 }
 
-Message *update_top_level(Message *message, String *field, Item *value)
+bool update_repeated_field(Message *message, const FieldDescriptor *fdesc, int index, Item *value)
+{
+	if (fdesc->is_repeated())
+	{
+		String *val, buf;
+		val= value->val_str(&buf);
+		if(!val)
+			return true;
+
+		std::string val_str(val->c_ptr());
+
+		if(TextFormat::ParseFieldValueFromString(val_str, fdesc, message) == false)
+		{
+			my_error(ER_NOT_SUPPORTED_YET, MYF(0),
+				"adding more than one value to a repeated field.");
+			return true;
+		}
+
+		return false;
+	}
+
+	return true;
+}
+
+Message *update_top_level(Message *message, String *field, int repeated_index, Item *value)
 {
   // Check if the field is defined in the proto definition.
   const Descriptor *desc = message->GetDescriptor();
@@ -562,8 +586,14 @@ Message *update_top_level(Message *message, String *field, Item *value)
   if (fdesc->type() == FieldDescriptor::TYPE_MESSAGE)
     return refl->MutableMessage(message, fdesc);
 
-  if (update_field(message, fdesc, value))
-    return NULL;
+  if(repeated_index < -1){
+	  if (update_field(message, fdesc, value))
+	  return NULL;
+  }
+  else{
+	  if (update_repeated_field(message, fdesc, repeated_index, value))
+	  return NULL;
+  }
 
   return message;
 }
@@ -589,7 +619,7 @@ bool Proto_wrapper::update(List<String> *field_path, Item *value)
     if (!field)
       break;
 
-    Message *msg = update_top_level(current_msg, field, value);
+    Message *msg = update_top_level(current_msg, field, -2, value);
     if (msg == current_msg)
       return false;
     else if (msg == NULL)
@@ -625,6 +655,57 @@ bool Proto_wrapper::update(List<String> *field_path, Item *value)
   }
 
   return true;
+}
+
+bool Proto_wrapper::update_repeated(List<String> *field_path, int index, Item *value)
+{
+	List_iterator_fast<String> it_path(*field_path);
+	Message *current_msg = message;
+	Message *parent = NULL;
+	String *field, *save_fld_name;
+
+	while (true) {
+	  save_fld_name = field;
+	  field = it_path++;
+	  if (!field)
+		break;
+
+	  Message *msg = update_top_level(current_msg, field, index, value);
+	  if (msg == current_msg)
+		return false;
+	  else if (msg == NULL)
+		return true;
+	  else
+	  {
+		parent = current_msg; // Keep a pointer to the container message.
+		current_msg = msg;
+	  }
+	}
+
+	if (parent)
+	{
+	  /**
+	   * If we are here, it means that the path was valid, but we didn't end
+	   * up on a primitive Protobuf type, so there's must be an inner message
+	   * to update.
+	   */
+	  if (update_message(parent, save_fld_name, value))
+	  {
+		String *val, buf;
+		val = value->val_str(&buf);
+
+		if (val)
+		  my_error(ER_INVALID_PROTO_TEXT, MYF(0),
+				   "not a PROTOBUF text, may need CAST", 0, val->c_ptr());
+		else
+		  my_error(ER_INVALID_PROTO_TEXT, MYF(0),
+				   "not a PROTOBUF text, may need CAST", 0, "NULL");
+		return true;
+	  }
+	  return false;
+	}
+
+	return true;
 }
 
 bool Proto_wrapper::to_text(String *val_ptr)

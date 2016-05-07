@@ -88,5 +88,22 @@ public:
   bool val_proto(Proto_wrapper *wr);
 };
 
+class Item_func_protobuf_update_repeated :public Item_proto_func
+{
+  String m_doc_value;
+  String m_path_value;
+public:
+  Item_func_protobuf_update_repeated(const POS &pos, PT_item_list *a)
+    : Item_proto_func(pos, a)
+  {}
+
+  const char *func_name() const
+  {
+    return "protobuf_update_repeated";
+  }
+
+  bool val_proto(Proto_wrapper *wr);
+};
+
 bool proto_value(Item **args, uint arg_idx, Proto_wrapper *wr);
 #endif /* ITEM_PROTO_FUNC_INCLUDED */
