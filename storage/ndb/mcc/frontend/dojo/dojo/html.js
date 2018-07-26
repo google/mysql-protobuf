@@ -99,7 +99,7 @@ delete this.parseResults;
 delete this.node;
 delete this.content;
 },onContentError:function(err){
-return "Error occured setting content: "+err;
+return "Error occurred setting content: "+err;
 },_mixin:function(_15){
 var _16={},key;
 for(key in _15){

@@ -259,7 +259,7 @@ public:
     {
       // Windows does not sleep on 'select' with 0 sockets
       Sleep(timeout);
-      return 0; // Timeout occured
+      return 0; // Timeout occurred
     }
 #endif
 

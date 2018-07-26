@@ -1621,7 +1621,7 @@ int sendPollNdb(int aMillisecondNumber, int minNoOfEventsToWakeup = 1, int force
 Remark:   First send all prepared operations and then check if there are any
           transactions already completed. Wait for not completed
           transactions until the specified number have completed or until the
-          timeout has occured. Timeout zero means no waiting time.
+          timeout has occurred. Timeout zero means no waiting time.
 ******************************************************************************/
 int	
 Ndb::sendPollNdb(int aMillisecondNumber, int minNoOfEventsToWakeup, int forceSend)

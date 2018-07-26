@@ -585,7 +585,7 @@ TESTCASE("TimeoutRandTransaction",
 }
 TESTCASE("BuddyTransNoTimeout", 
 	 "Start a transaction and perform an insert with NoCommit. " \
-	 "Start a buddy transaction wich performs long running scans " \
+	 "Start a buddy transaction which performs long running scans " \
 	 "and sleeps. " \
 	 "The total sleep time is longer than TransactionInactiveTimeout" \
 	 "Commit the first transaction, it should not have timed out."){

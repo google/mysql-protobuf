@@ -104,7 +104,7 @@ struct st_command_service_cbs
     stringified value or non-string data, which is in character_set_results.
 
     @returns
-      1  an error occured, server will abort the command
+      1  an error occurred, server will abort the command
       0  ok
   */
   int (*start_result_metadata)(void *ctx, uint num_cols, uint flags,

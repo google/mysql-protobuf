@@ -52,7 +52,7 @@ public:
   /**
    * Allocate memory for a number of objects from the heap.
    * @param[in] maxObjs The maximal number of objects this instance should
-   * accomodate.
+   * accommodate.
    * @return 0 or possible error code.
    */
   int init(Uint32 maxObjs);

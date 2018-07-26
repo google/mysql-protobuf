@@ -240,7 +240,7 @@ public:
      @param sql_text_len      The length of sql_text string
 
      @retval  false   OK
-     @retval  true    error occured
+     @retval  true    error occurred
   */
   virtual bool log_slow(THD *thd, ulonglong current_utime,
                         ulonglong query_start_arg, const char *user_host,

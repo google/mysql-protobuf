@@ -175,7 +175,7 @@ CREATE EVENT e2 ON SCHEDULE EVERY @step SECOND
   STARTS FROM_UNIXTIME(@unix_time) DO SELECT f1("<e2>");
 
 # We want to start at the beginning of the DST cycle, so we wait
-# untill current time divides by @step6.
+# until current time divides by @step6.
 let $wait_timeout= `SELECT @step6 + 1`;
 let $wait_condition= SELECT UNIX_TIMESTAMP() % @step6 = @step6 - 1;
 --source include/wait_condition.inc

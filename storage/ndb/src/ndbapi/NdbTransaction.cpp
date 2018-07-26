@@ -2194,7 +2194,7 @@ transactions.
     }
 
     /**********************************************************************/
-    /*	A serious error has occured. This could be due to deadlock or */
+    /*	A serious error has occurred. This could be due to deadlock or */
     /*	lack of resources or simply a programming error in NDB. This  */
     /*	transaction will be aborted. Actually it has already been     */
     /*	and we only need to report completion and return with the     */

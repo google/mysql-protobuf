@@ -360,7 +360,7 @@ class ConfiguratorHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             
         except:
             self.server.logger.exception(rt + ' '+self.path+ ' failed')
-            self.send_error(500,'Unexpected exception occured while processing: '+rt+' '+self.path+'\n'+traceback.format_exc()) # Some other number
+            self.send_error(500,'Unexpected exception occurred while processing: '+rt+' '+self.path+'\n'+traceback.format_exc()) # Some other number
         
     def do_HEAD(self):
         """Handles HEAD requests by returning the headers without the body if file can be stated."""

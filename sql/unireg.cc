@@ -1105,7 +1105,7 @@ static bool pack_fields(File file, List<Create_field> &create_fields,
                              return incremented by number of bits in preamble
                              used for this field.
 
-  @retval true  An error occured.
+  @retval true  An error occurred.
   @retval false Success.
 */
 

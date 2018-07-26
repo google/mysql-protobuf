@@ -147,7 +147,7 @@ class XMLTestResult(unittest.TextTestResult):
         self._tc['element'].set('status', 'skipped because: {0}'.format(reason))
 
     def addExpectedFailure(self, test, err):
-        """Called when an expected failure/error occured."""
+        """Called when an expected failure/error occurred."""
         super(type(self), self).addExpectedFailure(test, err)
         # TODO - can we utilize this?
 

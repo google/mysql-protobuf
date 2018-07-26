@@ -1868,7 +1868,7 @@ rtr_cur_search_with_match(
 				last_match_rec = rec;
 			} else {
 				/* This is the insertion case, it will break
-				once it finds the first MBR that can accomodate
+				once it finds the first MBR that can accommodate
 				the inserting rec */
 				break;
 			}

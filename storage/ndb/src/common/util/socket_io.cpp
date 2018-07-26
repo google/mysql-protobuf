@@ -32,7 +32,7 @@ poll_socket(ndb_socket_t socket, bool read, bool write,
   timeout_millis -= *total_elapsed_millis;
 
   if (timeout_millis <= 0)
-    return 0; // Timeout occured
+    return 0; // Timeout occurred
 
   const int res =
     ndb_poll(socket, read, write, false, timeout_millis);

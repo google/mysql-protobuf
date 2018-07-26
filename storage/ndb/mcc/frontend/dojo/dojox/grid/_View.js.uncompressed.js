@@ -120,7 +120,7 @@ define("dojox/grid/_View", [
 			this.simpleStructure = Boolean(vs.cells.length == 1);
 			// bookkeeping
 			this.testFlexCells();
-			// accomodate new structure
+			// accommodate new structure
 			this.updateStructure();
 		},
 		

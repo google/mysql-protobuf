@@ -101,7 +101,7 @@ SET @@global.init_slave = NULL;
 SELECT @@global.init_slave;
 
 #any string is accepted as valid value as its is not verified/compiled 
-# untill runtime
+# until runtime
 SET @@global.init_slave='abc 123 +-*/';
 SELECT @@global.init_slave;
 

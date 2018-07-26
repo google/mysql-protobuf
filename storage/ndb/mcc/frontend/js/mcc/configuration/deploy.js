@@ -1401,7 +1401,7 @@ function stopCluster() {
 
     function onError(errMsg, errReply) {
         mcc.util.dbg("stopCluster failed: "+errMsg);
-        alert("Error occured while stopping cluster: `"+errMsg+
+        alert("Error occurred while stopping cluster: `"+errMsg+
 	      "' (Press OK to continue)");
         ++errorReplies;
 

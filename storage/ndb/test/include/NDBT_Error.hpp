@@ -81,7 +81,7 @@ private:
 
 //
 //  ERR prints an NdbError object together with a description of where the
-//  error occured
+//  error occurred
 //
 #define NDB_ERR_OUT(where, error) \
   {  where << "ERROR: " << error.code << " " \

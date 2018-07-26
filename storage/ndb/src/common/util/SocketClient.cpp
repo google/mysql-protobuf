@@ -166,7 +166,7 @@ SocketClient::connect(const char* server_hostname,
                m_connect_timeout_millisec : -1) <= 0)
   {
     // Nothing has happened on the socket after timeout
-    // or an error occured
+    // or an error occurred
     my_socket_close(m_sockfd);
     my_socket_invalidate(&m_sockfd);
     return m_sockfd;

@@ -24,7 +24,7 @@
   @tparam Geom_types Geometry types definitions.
   @param g1 First Geometry operand, a point.
   @param g2 Second Geometry operand, not a geometry collection.
-  @param[out] pnull_value Returns whether error occured duirng the computation.
+  @param[out] pnull_value Returns whether error occurred duirng the computation.
   @return 0 if specified relation doesn't hold for the given operands,
                 otherwise returns none 0.
  */

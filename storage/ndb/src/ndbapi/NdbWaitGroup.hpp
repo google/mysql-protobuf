@@ -129,7 +129,7 @@ public:
         (c) another thread has called NdbWaitGroup::wakeup()
 
      The return value is the number of Ndb objects ready for polling, or -1
-     if a timeout occured.
+     if a timeout occurred.
 
       On return, arrayHead is set to point to the first element of
       the array of Ndb object pointers that are ready for polling, and those

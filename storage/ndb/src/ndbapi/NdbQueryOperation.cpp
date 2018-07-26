@@ -614,7 +614,7 @@ private:
    */
   Uint16 m_currentRow;
   
-  /** Max #rows which this stream may recieve in its TupleSet structures */
+  /** Max #rows which this stream may receive in its TupleSet structures */
   Uint32 m_maxRows;
 
   /** TupleSet contains the correlation between parent/childs */

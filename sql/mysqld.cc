@@ -3527,7 +3527,7 @@ int flush_auto_options(const char* fname)
   only allowed to trigger (re)evaluation.
   For instance, 'server_uuid' value will be evaluated and stored if there is
   no corresponding line in the file.
-  Because of the specifics of the auto-options, they need a seperate storage.
+  Because of the specifics of the auto-options, they need a separate storage.
   Meanwhile, it is the 'auto.cnf' that has the same structure as 'my.cnf'.
 
   @todo consider to implement sql-query-able persistent storage by WL#5279.

@@ -35,7 +35,7 @@ class NdbEventOperationImpl;
  *   Ndb::createEventOperation()
  * - execute() starts the event flow. Use Ndb::pollEvents() to wait
  *   for an event to occur.  Use Ndb::nextEvent() to iterate
- *   through the events that have occured.
+ *   through the events that have occurred.
  * - The instance is removed by Ndb::dropEventOperation()
  *
  * For more info see:

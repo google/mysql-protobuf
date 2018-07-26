@@ -9126,7 +9126,7 @@ insert_fields(THD *thd, Name_resolution_context *context, const char *db_name,
 
   @return Operation status
     @retval false   OK
-    @retval true    Error occured
+    @retval true    Error occurred
 */
 
 bool fill_record(THD *thd, TABLE *table, List<Item> &fields,

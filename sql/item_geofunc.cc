@@ -3640,7 +3640,7 @@ BG_geometry_collection::as_geometry_collection(String *geodata) const
          geo's data rather than directly using it.
   @param break_multi_geom whether break a multipoint or multilinestring or
          multipolygon so as to store its components separately into this object.
-  @return true if error occured, false if no error(successful).
+  @return true if error occurred, false if no error(successful).
  */
 bool BG_geometry_collection::store_geometry(const Geometry *geo,
                                             bool break_multi_geom)

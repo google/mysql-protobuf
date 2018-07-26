@@ -304,7 +304,7 @@ inline int InsertRecords(Ndb* pNdb, int nNoRecords){
 	  return 0;
 
 error_handler1:
-   ndbout << "Error occured in getNdbOperation " << endl;
+   ndbout << "Error occurred in getNdbOperation " << endl;
    ndbout << MyTransaction->getNdbError() << endl;
    pNdb->closeTransaction(MyTransaction);
    return -1 ;

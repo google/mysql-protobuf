@@ -102,7 +102,7 @@ LoaderModule.prototype.onTick             = function(stats) {
 
 /* onRecordError(record)
    Called after a record has been received by the database.
-   If an error has occured, record.error will be set.
+   If an error has occurred, record.error will be set.
 */
 LoaderModule.prototype.onRecordError      = function(record) {
 };

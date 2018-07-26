@@ -75,7 +75,7 @@ define("dojox/fx/ext-dojo/complex", ["dojo/_base/kernel", "dojo/_base/lang", "do
 		// summary:
 		//		A class that takes a complex property such as
 		//		clip style: rect(10px 30px 10px 50px), and breaks it
-		//		into seperate animatable units. The object has a getValue()
+		//		into separate animatable units. The object has a getValue()
 		//		that will return a string with the modified units.
 		//
 		PROP: /\([\w|,|+|\-|#|\.|\s]*\)/g,

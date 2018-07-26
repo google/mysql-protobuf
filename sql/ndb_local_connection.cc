@@ -72,7 +72,7 @@ Ndb_local_connection::execute_query(MYSQL_LEX_STRING sql_text,
   Ed_connection con(m_thd);
   if (con.execute_direct(sql_text))
   {
-    /* Error occured while executing the query */
+    /* Error occurred while executing the query */
     const uint last_errno = con.get_last_errno();
     assert(last_errno); // last_errno must have been set
     const char* last_errmsg = con.get_last_error();
@@ -386,7 +386,7 @@ Ndb_local_connection::create_sys_table(const char* db, size_t db_length,
 
   /*
     This is the only place where an error is suppressed
-    based one the original NDB error, wich is extracted
+    based one the original NDB error, which is extracted
     by parsing the error string, use a special suppressor
   */
   Create_sys_table_suppressor suppressor;

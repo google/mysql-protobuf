@@ -802,7 +802,7 @@ executeCallback(int result, NdbConnection* transObject, void* aObject)
       /* What can we do here? */
       ndbout_c("execute: %s", transObject->getNdbError().message);
     }//if(retCode == 3)
-    //    ndbout << "Error occured in poll:" << endl;
+    //    ndbout << "Error occurred in poll:" << endl;
     //    ndbout << NdbObject->getNdbError() << endl;
     failed++ ;
   }//if

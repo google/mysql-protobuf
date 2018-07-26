@@ -133,7 +133,7 @@ define("dojox/image/Lightbox", ["dojo", "dijit", "dojox", "dojo/text!./resources
 	dojo.declare("dojox.image.LightboxDialog",
 		dijit.Dialog, {
 		// summary:
-		//		The "dialog" shared	 between any Lightbox instances on the page, publically available
+		//		The "dialog" shared	 between any Lightbox instances on the page, publicly available
 		//		for programatic manipulation.
 		//
 		// description:

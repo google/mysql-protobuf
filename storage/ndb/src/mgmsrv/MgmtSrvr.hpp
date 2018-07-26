@@ -454,7 +454,7 @@ private:
   ndb_mgm_node_type getNodeType(NodeId) const;
 
   /**
-   * Handles the thread wich upon a 'Node is started' event will
+   * Handles the thread which upon a 'Node is started' event will
    * set the node's previous loglevel settings.
    */
   struct NdbThread* _logLevelThread;

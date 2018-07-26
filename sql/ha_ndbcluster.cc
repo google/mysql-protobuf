@@ -4558,7 +4558,7 @@ ha_ndbcluster::get_read_set(bool use_cursor, uint idx)
    *
    * In addition, when a 'current of' position is available:
    *  2) When deleting a row containing BLOBs PK is required
-   *     to delete BLOB stored in seperate fragments.
+   *     to delete BLOB stored in separate fragments.
    *  3) When updating BLOB columns PK is required to delete 
    *     old BLOB + insert new BLOB contents
    */
@@ -13781,7 +13781,7 @@ uint8 ha_ndbcluster::table_cache_type()
    @param[out] commit_count Commit count for the table.
 
    @return 0 on success.
-   @return 1 if an error occured.
+   @return 1 if an error occurred.
 */
 
 uint ndb_get_commitcount(THD *thd, char *norm_name,

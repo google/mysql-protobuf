@@ -64,7 +64,7 @@ typedef std::map<MYSQL_SOCKET, bool, Socket_lt_type>::iterator
 
 /**
   This class represents the Mysqld_socket_listener which prepare the
-  listener sockets to recieve connection events from the client. The
+  listener sockets to receive connection events from the client. The
   Mysqld_socket_listener may be composed of either or both a tcp socket
   which listen on a default mysqld tcp port or a user specified  port
   via mysqld command-line  and a unix socket which is bind to a mysqld

@@ -882,7 +882,7 @@ public:
   const NdbError & getNdbError() const;
 
   /**
-   * Get the method number where the error occured.
+   * Get the method number where the error occurred.
    * 
    * @return method number where the error occured.
    */

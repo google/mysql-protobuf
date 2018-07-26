@@ -94,7 +94,7 @@ public:
      Allocates an empty entry to be added to the hash table.
      It should be called before calling member function @c put.
 
-     @returns NULL if a problem occured, a valid pointer otherwise.
+     @returns NULL if a problem occurred, a valid pointer otherwise.
   */
   HASH_ROW_ENTRY* make_entry();
 

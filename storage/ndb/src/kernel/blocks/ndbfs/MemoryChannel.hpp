@@ -23,7 +23,7 @@
 // .DESCRIPTION
 //              Pointer based communication channel for communication between two 
 //              thread. It does not copy any data in or out the channel so the 
-//              item that is put in can not be used untill the other thread has 
+//              item that is put in can not be used until the other thread has 
 //              given it back. There is no support for detecting the return of a 
 //              item. The channel is half-duplex. 
 //              For comminication between 1 writer and 1 reader use the MemoryChannel

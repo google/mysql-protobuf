@@ -244,7 +244,7 @@ define("dojo/html", ["./_base/kernel", "./_base/lang", "./_base/array", "./_base
 			},
 
 			onContentError: function(err){
-				return "Error occured setting content: " + err;
+				return "Error occurred setting content: " + err;
 			},
 
 			_mixin: function(params){

@@ -63,7 +63,7 @@ monitor_id to "enum monitor_id_value" structure in srv0mon.h file. */
 static monitor_info_t	innodb_counter_info[] =
 {
 	/* A dummy item to mark the module start, this is
-	to accomodate the default value (0) set for the
+	to accommodate the default value (0) set for the
 	global variables with the control system. */
 	{"module_start", "module_start", "module_start",
 	MONITOR_MODULE,

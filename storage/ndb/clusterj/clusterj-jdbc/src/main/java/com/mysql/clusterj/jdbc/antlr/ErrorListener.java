@@ -49,7 +49,7 @@ public interface ErrorListener {
 
     /**
      * Generates a header line for error messages, normally containing source file and the position
-     * in the file where the error occured.
+     * in the file where the error occurred.
      *
      * @param e
      * @return String to print as a location information for the error

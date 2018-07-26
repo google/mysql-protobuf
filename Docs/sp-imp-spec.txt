@@ -243,7 +243,7 @@
        in the caller's frame is set in the new context as well.
     4) For each instruction, call its execute() method.
        The result is a pointer to the next instruction to execute (or NULL)
-       if an error occured.
+       if an error occurred.
     5) On success, set the new values of the OUT and INOUT parameters in
        the caller's frame.
 

@@ -816,7 +816,7 @@ private:
     Optimize DISTINCT, GROUP BY, ORDER BY clauses
 
     @retval false ok
-    @retval true  an error occured
+    @retval true  an error occurred
   */
   bool optimize_distinct_group_order();
 
