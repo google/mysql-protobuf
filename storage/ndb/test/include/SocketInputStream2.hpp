@@ -46,7 +46,7 @@ public:
 
     Returns:
      true - a line ended with newline was read from socket
-     false - EOF or read timeout occured
+     false - EOF or read timeout occurred
 
   */
   bool gets(BaseString& str);

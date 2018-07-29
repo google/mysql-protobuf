@@ -304,13 +304,13 @@ inline int InsertRecords(Ndb* pNdb, int nNoRecords){
 	  return 0;
 
 error_handler1:
-   ndbout << "Error occured in getNdbOperation " << endl;
+   ndbout << "Error occurred in getNdbOperation " << endl;
    ndbout << MyTransaction->getNdbError() << endl;
    pNdb->closeTransaction(MyTransaction);
    return -1 ;
 
 error_handler2:
-   ndbout << "Error occured in defining operation " << endl;
+   ndbout << "Error occurred in defining operation " << endl;
    ndbout << MyOperation[count_tables]->getNdbError() << endl;
    pNdb->closeTransaction(MyTransaction);
    return -1 ;

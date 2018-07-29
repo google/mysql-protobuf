@@ -358,9 +358,9 @@ widget.FeedViewer = dojo.declare(/*===== "dojox.atom.widget.FeedViewer", =====*/
 
 	onEntrySelected: function(/*object*/entry){
 		//	summary:
-		//		Function intended for over-riding/replacement as an attachpoint to for other items to recieve
+		//		Function intended for over-riding/replacement as an attachpoint to for other items to receive
 		//		selection notification.
-		//	description: Function intended for over0-riding/replacement as an attachpoint to for other items to recieve
+		//	description: Function intended for over0-riding/replacement as an attachpoint to for other items to receive
 		//		selection notification.
 		//
 		//	entry:

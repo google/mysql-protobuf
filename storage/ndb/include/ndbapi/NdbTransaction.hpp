@@ -634,7 +634,7 @@ public:
   const NdbOperation* getNdbErrorOperation() const;
 
   /** 
-   * Get the method number where the latest error occured.
+   * Get the method number where the latest error occurred.
    * 
    * @return Line number where latest error occured.
    */

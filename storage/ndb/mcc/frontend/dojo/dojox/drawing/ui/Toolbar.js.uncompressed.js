@@ -10,7 +10,7 @@ dojo.declare("dojox.drawing.ui.Toolbar", [], {
 	//		used for a DojoX Drawing.
 	// description:
 	//		Creates a GFX-based toobar that holds GFX-based buttons. Can be either created
-	//		within the actual drawing or within a seperate DOM element. When within the
+	//		within the actual drawing or within a separate DOM element. When within the
 	//		drawing, the toolbar will cover a portion of the drawing; hence the option.
 	//
 	//		A Toolbar can be created programmtically or in markup. Currently markup is as

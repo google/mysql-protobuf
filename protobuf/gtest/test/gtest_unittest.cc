@@ -553,7 +553,7 @@ TEST(CodePointToUtf8Test, CanEncode8To11Bits) {
 
   // 101 0111 0110 => 110-10101 10-110110
   // Some compilers (e.g., GCC on MinGW) cannot handle non-ASCII codepoints
-  // in wide strings and wide chars. In order to accomodate them, we have to
+  // in wide strings and wide chars. In order to accommodate them, we have to
   // introduce such character constants as integers.
   EXPECT_EQ("\xD5\xB6",
             CodePointToUtf8(static_cast<wchar_t>(0x576)));

@@ -3232,7 +3232,7 @@ private:
     @parms: bool first_read : signifying if this is the first time we are reading a row
             over an index.
     @return_value: -  error code when there are no more reeords to be fetched or some other
-                      error occured,
+                      error occurred,
                    -  0 otherwise.
   */
   int next_record_scan(bool first_read);

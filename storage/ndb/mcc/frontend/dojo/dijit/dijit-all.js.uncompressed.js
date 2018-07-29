@@ -3571,7 +3571,7 @@ return declare("dijit._MenuBase",
 
 	_stopFocusTimer: function(){
 		// summary:
-		//		Cancels the pending-focus timer because the menu was closed before focus occured
+		//		Cancels the pending-focus timer because the menu was closed before focus occurred
 		// tags:
 		//		private
 		if(this._focus_timer){
@@ -11550,7 +11550,7 @@ dojo.date.add = function(/*Date*/date, /*String*/interval, /*int*/amount){
 	//	amount:
 	//		How much to add to the date.
 
-	var sum = new Date(+date); // convert to Number before copying to accomodate IE (#3112)
+	var sum = new Date(+date); // convert to Number before copying to accommodate IE (#3112)
 	var fixOvershoot = false;
 	var property = "Date";
 

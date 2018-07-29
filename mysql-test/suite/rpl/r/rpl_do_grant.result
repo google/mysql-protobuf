@@ -245,7 +245,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION
 GRANT PROXY ON ''@'' TO 'root'@'localhost' WITH GRANT OPTION
 ##############################################################
 SET sql_log_bin= 0;
-call mtr.add_suppression("Slave SQL.*The incident LOST_EVENTS occured on the master.*");
+call mtr.add_suppression("Slave SQL.*The incident LOST_EVENTS occurred on the master.*");
 Warnings:
 Note	1049	Unknown database 'bug42217_db'
 SET sql_log_bin= 1;

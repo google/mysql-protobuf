@@ -1183,7 +1183,7 @@ int Log_event::read_log_event(IO_CACHE* file, String* packet,
     if (packet->append(file, data_len))
     {
       /*
-        Fatal error occured when appending rest of the event
+        Fatal error occurred when appending rest of the event
         to packet, possible failures:
 	1. EOF occured when reading from file, it's really an error
            as data_len is >=0 there's supposed to be more bytes available.

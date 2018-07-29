@@ -167,7 +167,7 @@ var FileInputAuto = declare("dojox.form.FileInputAuto", FileInput,
 	},
 
 	reset: function(e){
-		// summary: accomodate our extra focusListeners
+		// summary: accommodate our extra focusListeners
 		if(this._blurTimer){ clearTimeout(this._blurTimer); }
 
 		this.disconnect(this._blurListener);

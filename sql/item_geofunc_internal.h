@@ -534,7 +534,7 @@ inline bool is_areal(const Geometry *g)
 
   @param resbuf_mgr tracks the result buffer
   @return true if an error occurred or if the geometry is an empty
-          collection; false if no error occured.
+          collection; false if no error occurred.
 */
 template <typename BG_geotype>
 bool post_fix_result(BG_result_buf_mgr *resbuf_mgr,

@@ -111,7 +111,7 @@
 #
 # 6. Hints for analysis of test failures:
 #    1. Look into the protocol and check in which ddl*.inc
-#       script the difference to the expected result occured.
+#       script the difference to the expected result occurred.
 #    2. Comment the sourcing of all other ddl*.inc scripts
 #       out.
 #    3. Edit the ddl*.inc script where the error occured and

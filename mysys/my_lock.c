@@ -140,7 +140,7 @@ error:
 
   RETURN VALUE
     0   Success
-    -1  An error has occured and 'my_errno' is set
+    -1  An error has occurred and 'my_errno' is set
         to indicate the actual error code.
 */
 

@@ -476,7 +476,7 @@ Backup::calculate_disk_write_speed(Signal *signal)
   if (c_lqh->is_ldm_instance_io_lagging())
   {
     /**
-     * With IO lagging behind we will decrease the LCP speed to accomodate
+     * With IO lagging behind we will decrease the LCP speed to accommodate
      * for more REDO logging bandwidth. The definition of REDO log IO lagging
      * is kept in DBLQH, but will be a number of seconds of outstanding REDO
      * IO requests that LQH is still waiting for completion of.

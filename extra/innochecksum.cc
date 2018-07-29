@@ -220,7 +220,7 @@ error_message(
 
 /***********************************************//*
  @param>>_______[in] name>_____name of file.
- @retval file pointer; file pointer is NULL when error occured.
+ @retval file pointer; file pointer is NULL when error occurred.
 */
 
 FILE*

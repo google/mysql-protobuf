@@ -309,7 +309,7 @@ public:
     @returns
       -1   subquery wasn't found
        0   subqusery were added
-       1   error occured
+       1   error occurred
   */
   virtual int add_where_subquery(subquery_ctx *ctx,
                                   SELECT_LEX_UNIT *subquery)

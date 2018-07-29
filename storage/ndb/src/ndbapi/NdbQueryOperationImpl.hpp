@@ -52,7 +52,7 @@ public:
   /**
    * Allocate memory for a number of objects from the heap.
    * @param[in] maxObjs The maximal number of objects this instance should
-   * accomodate.
+   * accommodate.
    * @return 0 or possible error code.
    */
   int init(Uint32 maxObjs);
@@ -72,7 +72,7 @@ private:
   /** Size of each object (in bytes).*/
   const size_t m_objSize;
 
-  /** The number of objects this instance can accomodate.*/
+  /** The number of objects this instance can accommodate.*/
   Uint32 m_maxObjs;
 
   /** The allocated memory area.*/

@@ -64,7 +64,7 @@ public:
 /*
   Version for file format.
   1 - Initial Version (Never Released)
-  2 - Stream Compression, seperate blobs, no packing
+  2 - Stream Compression, separate blobs, no packing
   3 - One steam (row and blobs), with packing
 */
 #define ARCHIVE_VERSION 3

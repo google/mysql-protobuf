@@ -3,7 +3,7 @@ define("dojox/fx/_core", ["dojo/_base/lang", "dojo/_base/array","./_base"],
 	function(lang, arrayUtil, dojoxFx){
 	/*===== var dojox.fx._Line = line =====*/
 	var line = function(start, end){
-		// summary: a custom _Line to accomodate multi-dimensional values
+		// summary: a custom _Line to accommodate multi-dimensional values
 		//
 		// description:
 		//	a normal dojo._Line is the curve, and does Line(start,end)

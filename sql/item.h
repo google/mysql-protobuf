@@ -714,7 +714,7 @@ public:
 
     RETURN
       FALSE if parameter value has been set,
-      TRUE if error has occured.
+      TRUE if error has occurred.
   */
   virtual bool set_value(THD *thd, sp_rcontext *ctx, Item **it)= 0;
 

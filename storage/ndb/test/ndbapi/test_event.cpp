@@ -289,7 +289,7 @@ eventOperation(Ndb* pNdb, const NdbDictionary::Table &tab, void* pstats, int rec
 	    last_inconsitant_gci = gci;
 	    stats.n_inconsistent_gcis++;
 	  }
-	  g_warning << "A node failure has occured and events might be missing\n";	
+	  g_warning << "A node failure has occurred and events might be missing\n";	
 	}
 	g_info << function << "GCI " << gci << ": " << count;
 	struct receivedEvent* recEvent;
@@ -4633,7 +4633,7 @@ public:
 
   Uint64 gap_epoch[totalGaps]; // Store the gap epochs consumed
 
-  /** consumed_epochs[0] : #epochs the event buffer can accomodate
+  /** consumed_epochs[0] : #epochs the event buffer can accommodate
    * before the first overflow.
    * consumed_epochs[1-5] : Consumed epochs between each gaps.
    */

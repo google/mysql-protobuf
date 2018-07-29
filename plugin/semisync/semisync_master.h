@@ -109,7 +109,7 @@ public:
     it are in use. A new Block is allocated and is put into the rear of the
     Block link table if no Block is free.
 
-    @return Return a TranxNode *, or NULL if an error occured.
+    @return Return a TranxNode *, or NULL if an error occurred.
    */
   TranxNode *allocate_node()
   {

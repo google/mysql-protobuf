@@ -35,7 +35,7 @@ class NdbEventOperationImpl;
  *   Ndb::createEventOperation()
  * - execute() starts the event flow. Use Ndb::pollEvents() to wait
  *   for an event to occur.  Use Ndb::nextEvent() to iterate
- *   through the events that have occured.
+ *   through the events that have occurred.
  * - The instance is removed by Ndb::dropEventOperation()
  *
  * For more info see:
@@ -64,7 +64,7 @@ class NdbEventOperationImpl;
  * - Event code does not check table schema version. Make sure to drop events
  * after table is dropped. Will be fixed in later
  * versions.
- * - If a node failure has occured not all events will be received
+ * - If a node failure has occurred not all events will be received
  * anymore. Drop NdbEventOperation and Create again after nodes are up
  * again. Will be fixed in later versions.
  *

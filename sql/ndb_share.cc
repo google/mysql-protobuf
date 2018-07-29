@@ -108,7 +108,7 @@ NDB_SHARE::create_key(const char *new_key)
   my_stpcpy(buf_ptr, table_name_buf);
   buf_ptr += table_name_len;
 
-  // Check that writing has not occured beyond end of allocated memory
+  // Check that writing has not occurred beyond end of allocated memory
   assert(buf_ptr < reinterpret_cast<char*>(allocated_key) + size);
 
   DBUG_PRINT("info", ("size: %lu, sizeof(NDB_SHARE_KEY): %lu",

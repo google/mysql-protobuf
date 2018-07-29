@@ -30,7 +30,7 @@ class THD;
   The functionality is implemented by concatenating SQL
   queries and executing those using Ed_connection. Should
   the SQL query fail, the exact error message and all
-  warning that occured can be examined in order to handle
+  warning that occurred can be examined in order to handle
   the error in a graceful way.
 
 */

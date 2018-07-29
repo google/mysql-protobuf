@@ -2056,7 +2056,7 @@ public:
   */
   void remove_gtid(const Gtid &gtid);
   /**
-    Ensures that this Owned_gtids object can accomodate SIDNOs up to
+    Ensures that this Owned_gtids object can accommodate SIDNOs up to
     the given SIDNO.
 
     If this Owned_gtids object needs to be resized, then the lock

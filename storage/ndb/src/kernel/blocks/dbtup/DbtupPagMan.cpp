@@ -55,7 +55,7 @@
 // performed in chunks of pages and the algorithm tries to make the
 // chunks as large as possible.
 // This manager is invoked when fragments lack internal page space to
-// accomodate all the data they are requested to store. It is also
+// accommodate all the data they are requested to store. It is also
 // invoked when fragments deallocate page space back to the free area.
 //
 // The following routines are part of the external interface:

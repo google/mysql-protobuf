@@ -375,7 +375,7 @@ define("dojox/charting/DataChart", ["dojo/_base/kernel", "dojo/_base/lang", "doj
 
 			}else{
 
-				// each item is a seperate series.
+				// each item is a separate series.
 				arr.forEach(items, function(m, i){
 					var nm = this.store.getLabel(m);
 					if(!this.seriesData[nm]){

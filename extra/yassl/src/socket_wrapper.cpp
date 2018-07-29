@@ -181,7 +181,7 @@ uint Socket::receive(byte* buf, unsigned int sz)
 
     int recvd = recv_func_(ptr_, buf, sz);
 
-    // idea to seperate error from would block by arnetheduck@gmail.com
+    // idea to separate error from would block by arnetheduck@gmail.com
     if (recvd == -1) {
         if (get_lastError() == SOCKET_EWOULDBLOCK || 
             get_lastError() == SOCKET_EAGAIN) {

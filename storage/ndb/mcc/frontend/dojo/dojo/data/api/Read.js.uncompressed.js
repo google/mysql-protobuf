@@ -415,7 +415,7 @@ dojo.declare("dojo.data.api.Read", null, {
 		// description:
 		//		The close() method is intended for instructing the store to 'close' out
 		//		any information associated with a particular request.  In general, this API
-		//		expects to recieve as a parameter a request object returned from a fetch.
+		//		expects to receive as a parameter a request object returned from a fetch.
 		//		It will then close out anything associated with that request, such as
 		//		clearing any internal datastore caches and closing any 'open' connections.
 		//		For some store implementations, this call may be a no-op.

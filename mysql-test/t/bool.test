@@ -47,7 +47,7 @@ DROP TABLE t1;
 create table t1 (a int, b int);
 insert into t1 values(null, null), (0, null), (1, null), (null, 0), (null, 1), (0, 0), (0, 1), (1, 0), (1, 1);
 
-# Below test is valid untill we have True/False implemented as 1/0
+# Below test is valid until we have True/False implemented as 1/0
 # To comply to all rules it must show that:  n(AB) = nAonB,  n(AoB) = nAnB 
 
 select ifnull(A, 'N') as A, ifnull(B, 'N') as B, ifnull(not A, 'N') as nA, ifnull(not B, 'N') as nB, ifnull(A and B, 'N') as AB, ifnull(not (A and B), 'N') as `n(AB)`, ifnull((not A or not B), 'N') as nAonB, ifnull(A or B, 'N') as AoB, ifnull(not(A or B), 'N') as `n(AoB)`, ifnull(not A and not B, 'N') as nAnB from t1;

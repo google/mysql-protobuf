@@ -126,7 +126,7 @@ Cursor::Cursor(MYSQL_THD mysql_thd) :
   if (m_table_list->table->file->ha_rnd_init(true) != 0)
     return; // Error
 
-  // No error occured, set this to false.
+  // No error occurred, set this to false.
   m_is_finished= false;
 
   read();

@@ -71,7 +71,7 @@ struct DihScanGetNodesReq
 
   /**
    * DihScanGetNodesReq request information about specific fragments.
-   * - These are either specified in a seperate section (long request)
+   * - These are either specified in a separate section (long request)
    *   containing multiple FragItems.
    * - Or directly in a single fragItem[] below (short signal) if it 
    *   contain only a single FragItem.
@@ -98,7 +98,7 @@ struct DihScanGetNodesConf
 
   /**
    * DihScanGetNodesConf supply information about specific fragments.
-   * - These are either specified in a seperate section (long request)
+   * - These are either specified in a separate section (long request)
    *   containing multiple FragItems.
    * - Or directly in a single fragItem[] below (short signal) if it 
    *   contain only a single FragItem.

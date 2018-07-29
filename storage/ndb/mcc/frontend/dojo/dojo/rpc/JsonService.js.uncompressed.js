@@ -64,7 +64,7 @@ dojo.declare("dojo.rpc.JsonService", dojo.rpc.RpcService, {
 			//		parse the result envelope and pass the results back to
 			//		the callback function
 			//	obj: Object
-			//		Object containing envelope of data we recieve from the server
+			//		Object containing envelope of data we receive from the server
 
 			if(dojo.isObject(obj)){
 				if("result" in obj){

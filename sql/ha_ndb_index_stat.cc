@@ -2758,7 +2758,7 @@ ndb_index_stat_wait_analyze(Ndb_index_stat *st,
       break;
     if (st->error_count != snap.error_count)
     {
-      /* A new error has occured */
+      /* A new error has occurred */
       DBUG_ASSERT(st->error_count > snap.error_count);
       err= st->error.code;
       glob.analyze_error++;

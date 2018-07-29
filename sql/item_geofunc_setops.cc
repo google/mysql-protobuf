@@ -2523,7 +2523,7 @@ bg_geo_set_op(Geometry *g1, Geometry *g2, String *result)
   }
 
   /*
-    null_value is set in above xxx_operatoin calls if error occured.
+    null_value is set in above xxx_operatoin calls if error occurred.
   */
   if (null_value)
   {

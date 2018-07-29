@@ -3100,7 +3100,7 @@ find_order_in_list(THD *thd, Ref_ptr_array ref_pointer_array,
   select_item= find_item_in_list(order_item, fields, &counter,
                                  REPORT_EXCEPT_NOT_FOUND, &resolution);
   if (!select_item)
-    return TRUE; /* The item is not unique, or some other error occured. */
+    return TRUE; /* The item is not unique, or some other error occurred. */
 
 
   /* Check whether the resolved field is not ambiguos. */

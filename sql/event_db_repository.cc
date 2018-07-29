@@ -959,7 +959,7 @@ end:
 
 
   @retval FALSE  an event with such db/name key exists
-  @retval  TRUE   no record found or an error occured.
+  @retval  TRUE   no record found or an error occurred.
 */
 
 bool

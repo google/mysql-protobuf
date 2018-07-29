@@ -177,7 +177,7 @@ SocketServer::doAccept()
   const int ret = m_services_poller.poll(accept_timeout_ms);
   if (ret < 0)
   {
-    // Error occured, indicate error to caller by returning false
+    // Error occurred, indicate error to caller by returning false
     m_services.unlock();
     return false;
   }

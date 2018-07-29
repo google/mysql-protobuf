@@ -2629,7 +2629,7 @@ NdbQueryIndexOperationDefImpl
   m_isPrepared = true;
 
   /**
-   * Serialize unique index as a seperate lookupNode
+   * Serialize unique index as a separate lookupNode
    */
   {
     // Reserve memory for Index LookupNode, fill in contents later when
