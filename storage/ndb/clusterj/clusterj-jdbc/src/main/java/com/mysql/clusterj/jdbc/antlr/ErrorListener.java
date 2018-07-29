@@ -57,7 +57,7 @@ public interface ErrorListener {
     public String getErrorHeader(RecognitionException e);
 
     /**
-     * Generates the message string for the actual error occured, must distinguish between
+     * Generates the message string for the actual error occurred, must distinguish between
      * the different RecognitionException subclasses.
      *
      * @param e

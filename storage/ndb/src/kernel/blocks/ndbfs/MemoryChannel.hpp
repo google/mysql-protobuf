@@ -55,7 +55,7 @@
 //                      AFS_ERROR_CHANNALFULL, channel is full
 //
 // T* read();
-//      Reads a itemn from the channel, if channel is empty it blocks untill
+//      Reads a itemn from the channel, if channel is empty it blocks until
 //              an item can be read.
 // return
 //                      T : item from the channel

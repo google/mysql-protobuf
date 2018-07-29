@@ -310,7 +310,7 @@ error_handler1:
    return -1 ;
 
 error_handler2:
-   ndbout << "Error occured in defining operation " << endl;
+   ndbout << "Error occurred in defining operation " << endl;
    ndbout << MyOperation[count_tables]->getNdbError() << endl;
    pNdb->closeTransaction(MyTransaction);
    return -1 ;

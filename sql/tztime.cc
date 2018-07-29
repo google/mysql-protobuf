@@ -633,7 +633,7 @@ sec_to_TIME(MYSQL_TIME * tmp, my_time_t t, long offset)
 
 
 /*
-  Find time range wich contains given my_time_t value
+  Find time range which contains given my_time_t value
 
   SYNOPSIS
     find_time_range()

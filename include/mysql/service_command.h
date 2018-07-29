@@ -118,7 +118,7 @@ struct st_command_service_cbs
     @param charset Field's charset
 
     @returns
-      1  an error occured, server will abort the command
+      1  an error occurred, server will abort the command
       0  ok
   */
   int (*field_metadata)(void *ctx, struct st_send_field *field,

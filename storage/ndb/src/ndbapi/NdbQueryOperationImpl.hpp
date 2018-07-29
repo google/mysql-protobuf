@@ -72,7 +72,7 @@ private:
   /** Size of each object (in bytes).*/
   const size_t m_objSize;
 
-  /** The number of objects this instance can accomodate.*/
+  /** The number of objects this instance can accommodate.*/
   Uint32 m_maxObjs;
 
   /** The allocated memory area.*/

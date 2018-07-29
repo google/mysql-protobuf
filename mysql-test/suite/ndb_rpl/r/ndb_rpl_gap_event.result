@@ -23,7 +23,7 @@ Warning	3090	Changing sql mode 'NO_AUTO_CREATE_USER' is deprecated. It will be r
 Slave_IO_Running = 'Yes'
 Slave_SQL_Running = 'No'
 Last_Errno = '1590'
-Last_Error = 'The incident LOST_EVENTS occured on the master. Message: mysqld startup'
+Last_Error = 'The incident LOST_EVENTS occurred on the master. Message: mysqld startup'
 Warnings:
 Warning	3090	Changing sql mode 'NO_AUTO_CREATE_USER' is deprecated. It will be removed in a future release.
 drop table if exists t1;

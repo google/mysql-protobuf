@@ -307,7 +307,7 @@ public:
    *          - true if the addition was successful,
    *          - false if not
    *          - RequestStatus will be filled in with a suitable error
-   *            if an error occured.
+   *            if an error occurred.
    */
   bool defineProcess(RequestStatus *rs, Process * arg);
 
