@@ -1,13 +1,13 @@
 PATH
   remote: .
   specs:
-    google-protobuf (3.0.0.alpha.3)
+    google-protobuf (3.0.0.alpha.4.0.pre)
 
 GEM
   remote: https://rubygems.org/
   specs:
     power_assert (0.2.2)
-    rake (10.4.2)
+    rake (13.0.3)
     rake-compiler (0.9.5)
       rake
     rubygems-tasks (0.2.4)
